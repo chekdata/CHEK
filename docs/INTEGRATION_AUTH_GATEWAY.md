@@ -1,4 +1,4 @@
-# Auth-saas 与网关接入（Chaoke 侧约定）
+# Auth-saas 与网关接入（CHEK 侧约定）
 
 ## 1. 统一入口与环境
 
@@ -33,17 +33,17 @@ OpenAPI：`https://api-dev.chekkk.com/api/auth/openapi.json`
 2) 参数中提交用户的 `sid_at`  
 3) 校验通过后，网关将用户身份信息写入下游请求头  
 
-Chaoke 服务端只需要信任“网关注入身份头”，并做业务权限校验即可。
+CHEK 服务端只需要信任“网关注入身份头”，并做业务权限校验即可。
 
-## 4. Chaoke 服务命名与路由（建议）
+## 4. CHEK 服务命名与路由（建议）
 
 P0 建议服务与前缀如下：
 
-- `chaoke-content`：`/api/chaoke-content/**`（百科+帖子+审核+志愿者）
-- `chaoke-ai`：`/api/chaoke-ai/**`
-- `chaoke-media`：`/api/chaoke-media/**`
+- `chek-content`：`/api/chek-content/**`（有知+相辅）
+- `chek-media`：`/api/chek-media/**`（可选：上传/下载鉴权）
+- `chek-ai`：`/api/chek-ai/**`（可选：AI来）
 
-> 后续如需要再拆分（P1/P2）：可从 `chaoke-content` 拆出 `chaoke-wiki/chaoke-post/chaoke-moderation`，但网关前缀规则不变。
+> 后续如需要再拆分（P1/P2）：可从 `chek-content` 拆出 `chek-wiki/chek-forum` 等，但网关前缀规则不变。
 
 每个服务必须提供：
 
@@ -58,6 +58,7 @@ P0 建议服务与前缀如下：
 ## 5. 权限模型（P0 推荐）
 
 - Auth-saas 的 `permissionCodeList`：用于“平台/内部系统权限点”，可作为后台权限参考
-- Chaoke 的“产品角色”（游客/志愿者/审核员/管理员）：
-  - 由 Chaoke 自己的 DB 决定（例如 `volunteer_profile.status`）
-  - 写接口必须做硬校验（前端仅做引导）
+- CHEK 的最小权限：
+  - 游客（未登录）：只读（有知/相辅）
+  - 登录用户：可发相辅/评论/删除自己的内容
+  - 管理员：可下架内容；Wiki 写入（MVP 可先只给管理员/白名单）

@@ -1,6 +1,6 @@
 # backend-chek-ai
 
-CHEK AI 服务（P0：价格问答/AI 向导；只引用可追溯事实：已发布百科 + 已核实举报帖）。
+CHEK AI 服务（P1：AI来；引用有知与公开相辅；可选返回 `ui`=A2UI tree）。
 
 ## 本地运行
 
@@ -16,4 +16,3 @@ mvn spring-boot:run
 依赖：
 
 - `CHEK_CONTENT_BASE_URL`：内容服务地址（默认 `http://localhost:8081`）
-

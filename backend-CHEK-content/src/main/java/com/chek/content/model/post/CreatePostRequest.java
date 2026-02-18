@@ -2,28 +2,27 @@ package com.chek.content.model.post;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.time.Instant;
+import java.util.List;
 
 public class CreatePostRequest {
-  @NotBlank
-  @Size(max = 32)
-  private String type;
-
   @Size(max = 120)
   private String title;
 
+  @NotBlank
   @Size(max = 4000)
   private String body;
 
-  // JSON string; keep it flexible for MVP
-  private String extJson;
+  private List<@NotBlank @Size(max = 64) String> tags;
 
-  public String getType() {
-    return type;
-  }
+  @Size(max = 120)
+  private String locationName;
 
-  public void setType(String type) {
-    this.type = type;
-  }
+  private Double lng;
+
+  private Double lat;
+
+  private Instant occurredAt;
 
   public String getTitle() {
     return title;
@@ -41,12 +40,43 @@ public class CreatePostRequest {
     this.body = body;
   }
 
-  public String getExtJson() {
-    return extJson;
+  public List<String> getTags() {
+    return tags;
   }
 
-  public void setExtJson(String extJson) {
-    this.extJson = extJson;
+  public void setTags(List<String> tags) {
+    this.tags = tags;
+  }
+
+  public String getLocationName() {
+    return locationName;
+  }
+
+  public void setLocationName(String locationName) {
+    this.locationName = locationName;
+  }
+
+  public Double getLng() {
+    return lng;
+  }
+
+  public void setLng(Double lng) {
+    this.lng = lng;
+  }
+
+  public Double getLat() {
+    return lat;
+  }
+
+  public void setLat(Double lat) {
+    this.lat = lat;
+  }
+
+  public Instant getOccurredAt() {
+    return occurredAt;
+  }
+
+  public void setOccurredAt(Instant occurredAt) {
+    this.occurredAt = occurredAt;
   }
 }
-

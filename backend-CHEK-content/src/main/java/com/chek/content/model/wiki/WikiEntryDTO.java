@@ -1,20 +1,35 @@
 package com.chek.content.model.wiki;
 
-public class WikiEntryDTO {
-  private long id;
-  private String title;
-  private String entryType;
-  private String summary;
-  private String contentStructJson;
-  private String status;
-  private String createdAt;
+import java.time.Instant;
+import java.util.List;
 
-  public long getId() {
-    return id;
+public class WikiEntryDTO {
+  private long entryId;
+  private String slug;
+  private String title;
+  private String summary;
+  private String body;
+  private List<String> tags;
+  private boolean isPublic;
+  private boolean isIndexable;
+  private Instant publishedAt;
+  private Instant createdAt;
+  private Instant updatedAt;
+
+  public long getEntryId() {
+    return entryId;
   }
 
-  public void setId(long id) {
-    this.id = id;
+  public void setEntryId(long entryId) {
+    this.entryId = entryId;
+  }
+
+  public String getSlug() {
+    return slug;
+  }
+
+  public void setSlug(String slug) {
+    this.slug = slug;
   }
 
   public String getTitle() {
@@ -25,14 +40,6 @@ public class WikiEntryDTO {
     this.title = title;
   }
 
-  public String getEntryType() {
-    return entryType;
-  }
-
-  public void setEntryType(String entryType) {
-    this.entryType = entryType;
-  }
-
   public String getSummary() {
     return summary;
   }
@@ -41,28 +48,59 @@ public class WikiEntryDTO {
     this.summary = summary;
   }
 
-  public String getContentStructJson() {
-    return contentStructJson;
+  public String getBody() {
+    return body;
   }
 
-  public void setContentStructJson(String contentStructJson) {
-    this.contentStructJson = contentStructJson;
+  public void setBody(String body) {
+    this.body = body;
   }
 
-  public String getStatus() {
-    return status;
+  public List<String> getTags() {
+    return tags;
   }
 
-  public void setStatus(String status) {
-    this.status = status;
+  public void setTags(List<String> tags) {
+    this.tags = tags;
   }
 
-  public String getCreatedAt() {
+  public boolean isPublic() {
+    return isPublic;
+  }
+
+  public void setPublic(boolean aPublic) {
+    isPublic = aPublic;
+  }
+
+  public boolean isIndexable() {
+    return isIndexable;
+  }
+
+  public void setIndexable(boolean indexable) {
+    isIndexable = indexable;
+  }
+
+  public Instant getPublishedAt() {
+    return publishedAt;
+  }
+
+  public void setPublishedAt(Instant publishedAt) {
+    this.publishedAt = publishedAt;
+  }
+
+  public Instant getCreatedAt() {
     return createdAt;
   }
 
-  public void setCreatedAt(String createdAt) {
+  public void setCreatedAt(Instant createdAt) {
     this.createdAt = createdAt;
   }
-}
 
+  public Instant getUpdatedAt() {
+    return updatedAt;
+  }
+
+  public void setUpdatedAt(Instant updatedAt) {
+    this.updatedAt = updatedAt;
+  }
+}

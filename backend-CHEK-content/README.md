@@ -1,6 +1,6 @@
 # backend-chek-content
 
-CHEK 内容服务（P0：百科 Wiki + 图文帖子 Post + 标签 + 审核 + 志愿者认证 + 供需动作）。
+CHEK 内容服务（MVP：有知 Wiki + 相辅 Post + 评论 Comment + 标签 + 搜索 + SEO/SSG 公共只读接口）。
 
 ## 本地运行
 
@@ -25,4 +25,3 @@ mvn spring-boot:run
 
 - `GET http://localhost:8081/healthz`
 - `GET http://localhost:8081/openapi.json`
-

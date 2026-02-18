@@ -1,15 +1,15 @@
 # CICD / GitOps / OpenAPI 交付规范（按 chekdata 指南）
 
-> 本文只摘取与 Chaoke 新服务落地相关的“最短可执行路径”，完整规范见：
+> 本文只摘取与 CHEK 新服务落地相关的“最短可执行路径”，完整规范见：
 > - `/Users/jasonhong/Desktop/开发项目/ops-bootstrap/skills/chekdata-rd-guide/reference/研发使用指南-前端.md`
 > - `/Users/jasonhong/Desktop/开发项目/ops-bootstrap/skills/chekdata-rd-guide/reference/研发使用指南-后端.md`
 > - `/Users/jasonhong/Desktop/开发项目/ops-bootstrap/skills/chekdata-rd-guide/reference/研发使用指南-网关与OpenAPI.md`
 
 ## 0. P0 服务清单（建议）
 
-- `chaoke-content`：`/api/chaoke-content/**`
-- `chaoke-ai`：`/api/chaoke-ai/**`
-- `chaoke-media`：`/api/chaoke-media/**`
+- `chek-content`：`/api/chek-content/**`（有知+相辅）
+- `chek-media`：`/api/chek-media/**`（可选）
+- `chek-ai`：`/api/chek-ai/**`（可选，P1：AI来）
 
 ## 1. 分支与环境映射
 

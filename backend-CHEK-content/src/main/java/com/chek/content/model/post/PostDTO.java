@@ -1,37 +1,30 @@
 package com.chek.content.model.post;
 
+import java.time.Instant;
+import java.util.List;
+
 public class PostDTO {
-  private long id;
-  private String type;
-  private String status;
+  private long postId;
   private String title;
   private String body;
-  private String extJson;
+  private List<String> tags;
+  private String locationName;
+  private Double lng;
+  private Double lat;
+  private Instant occurredAt;
   private String authorUserOneId;
-  private String createdAt;
+  private boolean isPublic;
+  private boolean isIndexable;
+  private long commentCount;
+  private Instant createdAt;
+  private Instant updatedAt;
 
-  public long getId() {
-    return id;
+  public long getPostId() {
+    return postId;
   }
 
-  public void setId(long id) {
-    this.id = id;
-  }
-
-  public String getType() {
-    return type;
-  }
-
-  public void setType(String type) {
-    this.type = type;
-  }
-
-  public String getStatus() {
-    return status;
-  }
-
-  public void setStatus(String status) {
-    this.status = status;
+  public void setPostId(long postId) {
+    this.postId = postId;
   }
 
   public String getTitle() {
@@ -50,12 +43,44 @@ public class PostDTO {
     this.body = body;
   }
 
-  public String getExtJson() {
-    return extJson;
+  public List<String> getTags() {
+    return tags;
   }
 
-  public void setExtJson(String extJson) {
-    this.extJson = extJson;
+  public void setTags(List<String> tags) {
+    this.tags = tags;
+  }
+
+  public String getLocationName() {
+    return locationName;
+  }
+
+  public void setLocationName(String locationName) {
+    this.locationName = locationName;
+  }
+
+  public Double getLng() {
+    return lng;
+  }
+
+  public void setLng(Double lng) {
+    this.lng = lng;
+  }
+
+  public Double getLat() {
+    return lat;
+  }
+
+  public void setLat(Double lat) {
+    this.lat = lat;
+  }
+
+  public Instant getOccurredAt() {
+    return occurredAt;
+  }
+
+  public void setOccurredAt(Instant occurredAt) {
+    this.occurredAt = occurredAt;
   }
 
   public String getAuthorUserOneId() {
@@ -66,12 +91,43 @@ public class PostDTO {
     this.authorUserOneId = authorUserOneId;
   }
 
-  public String getCreatedAt() {
+  public boolean isPublic() {
+    return isPublic;
+  }
+
+  public void setPublic(boolean aPublic) {
+    isPublic = aPublic;
+  }
+
+  public boolean isIndexable() {
+    return isIndexable;
+  }
+
+  public void setIndexable(boolean indexable) {
+    isIndexable = indexable;
+  }
+
+  public long getCommentCount() {
+    return commentCount;
+  }
+
+  public void setCommentCount(long commentCount) {
+    this.commentCount = commentCount;
+  }
+
+  public Instant getCreatedAt() {
     return createdAt;
   }
 
-  public void setCreatedAt(String createdAt) {
+  public void setCreatedAt(Instant createdAt) {
     this.createdAt = createdAt;
   }
-}
 
+  public Instant getUpdatedAt() {
+    return updatedAt;
+  }
+
+  public void setUpdatedAt(Instant updatedAt) {
+    this.updatedAt = updatedAt;
+  }
+}
