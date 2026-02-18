@@ -1,4 +1,4 @@
-FROM chek-images-cn-beijing.cr.volces.com/devops/node:20-alpine AS deps
+FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -6,6 +6,7 @@ RUN npm ci
 FROM deps AS builder
 WORKDIR /app
 COPY . .
+RUN mkdir -p public
 ARG CHEK_API_BASE_URL=https://api.chekkk.com
 ARG CHEK_BASE_PATH=/chek
 ENV CHEK_API_BASE_URL=$CHEK_API_BASE_URL
@@ -13,7 +14,7 @@ ENV CHEK_BASE_PATH=$CHEK_BASE_PATH
 ENV NEXT_PUBLIC_CHEK_BASE_PATH=$CHEK_BASE_PATH
 RUN npm run build
 
-FROM chek-images-cn-beijing.cr.volces.com/devops/node:20-alpine AS runner
+FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
