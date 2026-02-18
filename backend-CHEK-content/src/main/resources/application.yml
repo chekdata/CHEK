@@ -11,6 +11,9 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    table: chek_content_flyway_schema_history
   data:
     redis:
       host: ${REDIS_HOST:127.0.0.1}
@@ -21,4 +24,3 @@ spring:
 springdoc:
   api-docs:
     path: /openapi.json
-
