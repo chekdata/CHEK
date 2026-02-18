@@ -1,7 +1,10 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { serverGet } from '@/lib/server-api';
 import { PostDTO } from '@/lib/api-types';
 import { PostCard } from '@/components/PostCard';
+import cat from '@assets/IP/空状态-通用.png';
+import { WelcomeModal } from '@/components/WelcomeModal';
 
 export const revalidate = 30;
 
@@ -14,6 +17,7 @@ export default async function FeedPage() {
 
   return (
     <>
+      <WelcomeModal />
       <header className="chek-header">
         <div className="chek-title-row">
           <h1 className="chek-title">相辅</h1>
@@ -44,6 +48,33 @@ export default async function FeedPage() {
           </Link>
         </div>
       </header>
+
+      <section className="chek-section" style={{ paddingTop: 12, paddingBottom: 0 }}>
+        <Link
+          href="/letter"
+          className="chek-card"
+          style={{
+            display: 'flex',
+            gap: 12,
+            alignItems: 'center',
+            padding: 14,
+            borderRadius: 22,
+            background:
+              'linear-gradient(135deg, rgba(51,136,255,0.12), rgba(70,235,213,0.10), rgba(211,119,205,0.08))',
+          }}
+        >
+          <Image src={cat} alt="" width={44} height={44} style={{ borderRadius: 14 }} />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontWeight: 900 }}>致旅客的一封信</div>
+            <div className="chek-muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
+              欢迎你来潮汕。路上辛苦了；如果遇到不愉快的事，先说声对不起。
+            </div>
+          </div>
+          <div className="chek-chip gray" style={{ height: 30 }}>
+            打开
+          </div>
+        </Link>
+      </section>
 
       <div className="chek-chip-row" aria-label="标签">
         {DEFAULT_TAGS.map((t) => (
@@ -78,4 +109,3 @@ export default async function FeedPage() {
     </>
   );
 }
-

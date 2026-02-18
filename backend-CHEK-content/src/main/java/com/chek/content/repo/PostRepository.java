@@ -159,7 +159,7 @@ public class PostRepository {
               conn.prepareStatement(
                   "INSERT INTO chek_content_post(title, body_md, is_public, is_indexable, occurred_at, location_name, lng, lat, author_user_one_id, created_at, updated_at) "
                       + "VALUES(?, ?, TRUE, TRUE, ?, ?, ?, ?, ?, NOW(), NOW())",
-                  Statement.RETURN_GENERATED_KEYS);
+                  new String[] {"id"});
           ps.setString(1, req.getTitle());
           ps.setString(2, req.getBody());
           Instant occurredAt = req.getOccurredAt();
@@ -228,7 +228,7 @@ public class PostRepository {
               conn.prepareStatement(
                   "INSERT INTO chek_content_comment(post_id, body, author_user_one_id, parent_comment_id, created_at, updated_at) "
                       + "VALUES(?, ?, ?, ?, NOW(), NOW())",
-                  Statement.RETURN_GENERATED_KEYS);
+                  new String[] {"id"});
           ps.setLong(1, postId);
           ps.setString(2, req.getBody());
           ps.setString(3, userOneId);

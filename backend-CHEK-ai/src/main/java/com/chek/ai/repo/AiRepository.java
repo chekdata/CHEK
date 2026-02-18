@@ -22,7 +22,7 @@ public class AiRepository {
           PreparedStatement ps =
               conn.prepareStatement(
                   "INSERT INTO chek_ai_session(user_one_id, created_at) VALUES(?, NOW())",
-                  Statement.RETURN_GENERATED_KEYS);
+                  new String[] {"id"});
           ps.setString(1, userOneId);
           return ps;
         },
@@ -38,4 +38,3 @@ public class AiRepository {
         content);
   }
 }
-

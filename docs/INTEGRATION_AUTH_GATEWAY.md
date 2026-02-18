@@ -8,6 +8,11 @@
 
 所有前端请求统一为：`{API_BASE_URL}/api/<svc>/...`（禁止直连 K8s Service）。
 
+本地联调（推荐）：
+
+- 用仓库内的 `backend-CHEK-dev-gateway` 在本地模拟网关：把 `/api/<svc>/...` 转发到本地微服务端口，并从 auth-saas 拉 `userInfo` 注入 `X-User-One-Id`。
+- 一键启动见：`/Users/jasonhong/Desktop/CHEK/docs/LOCAL_DEV.md`
+
 ## 2. 用户体系（backend-auth-saas）
 
 OpenAPI：`https://api-dev.chekkk.com/api/auth/openapi.json`
@@ -16,7 +21,7 @@ OpenAPI：`https://api-dev.chekkk.com/api/auth/openapi.json`
 
 - `POST /api/auth/v1/wechat/login`（微信 code 登录；返回 `UserLoginDTO`，内含 `accessToken=sid_at`）
 - `POST /api/auth/v1/sms/send`（发送验证码）
-- `POST /api/auth/v1/smsLogin`（短信登录）
+- `POST /api/auth/v1/accounts/smsLogin`（短信登录）
 - `POST /api/auth/v1/user/wechat/bindPhone`（微信登录后绑定手机号）
 - `GET /api/auth/v1/userInfo`（拉取当前用户信息，含 `permissionCodeList`）
 - `GET /api/auth/v1/logout`

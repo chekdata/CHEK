@@ -15,7 +15,7 @@ async function paginate<T extends { [k: string]: any }>(path: string, idKey: str
   const out: T[] = [];
   let cursor: number | null = null;
   for (let i = 0; i < 20; i++) {
-    const url = `${path}${path.includes('?') ? '&' : '?'}limit=200${cursor ? `&cursor=${cursor}` : ''}`;
+    const url: string = `${path}${path.includes('?') ? '&' : '?'}limit=200${cursor ? `&cursor=${cursor}` : ''}`;
     const page = (await serverGet<T[]>(url, { revalidateSeconds: 300 })) || [];
     if (page.length === 0) break;
     out.push(...page);
@@ -38,6 +38,7 @@ export async function GET() {
   const urls: Array<{ loc: string; lastmod?: string }> = [];
   urls.push({ loc: `${site}/feed` });
   urls.push({ loc: `${site}/wiki` });
+  urls.push({ loc: `${site}/letter` });
 
   for (const e of wiki) {
     urls.push({
@@ -72,4 +73,3 @@ export async function GET() {
 
   return new Response(xml, { headers: { 'Content-Type': 'application/xml; charset=utf-8' } });
 }
-

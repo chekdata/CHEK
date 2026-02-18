@@ -3,6 +3,13 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ChekCardBlock } from '@/components/ChekCardBlock';
 
+function nodeToText(node: unknown): string {
+  if (node == null) return '';
+  if (typeof node === 'string') return node;
+  if (Array.isArray(node)) return node.map(nodeToText).join('');
+  return String(node);
+}
+
 export function MarkdownBody({ body }: { body: string }) {
   const md = body || '';
 
@@ -24,31 +31,32 @@ export function MarkdownBody({ body }: { body: string }) {
             {children}
           </a>
         ),
-        code: ({ className, children, inline }) => {
+        pre: ({ children }) => {
+          const arr = React.Children.toArray(children);
+          const codeEl = arr.find((n) => React.isValidElement(n)) as React.ReactElement<any> | undefined;
+          const className = codeEl?.props?.className;
           const lang = String(className || '').replace(/^language-/, '');
-          const raw = String(children || '').trim();
+          const raw = nodeToText(codeEl?.props?.children).trim();
 
           if (lang === 'chek-card') {
             try {
               const obj = JSON.parse(raw);
               return <ChekCardBlock title={obj?.title} items={obj?.items} />;
             } catch {
-              return (
-                <pre className="chek-card" style={{ padding: 14, overflowX: 'auto' }}>
-                  <code>{raw}</code>
-                </pre>
-              );
+              // fallthrough to raw code block
             }
           }
 
-          if (!inline) {
-            return (
-              <pre className="chek-card" style={{ padding: 14, overflowX: 'auto' }}>
-                <code>{raw}</code>
-              </pre>
-            );
+          return (
+            <pre className="chek-card" style={{ padding: 14, overflowX: 'auto' }}>
+              <code>{raw || nodeToText(children)}</code>
+            </pre>
+          );
+        },
+        code: ({ children, className }) => {
+          if (String(className || '').startsWith('language-')) {
+            return <code className={className}>{children}</code>;
           }
-
           return (
             <code
               style={{

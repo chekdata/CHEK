@@ -167,7 +167,7 @@ public class WikiRepository {
               conn.prepareStatement(
                   "INSERT INTO chek_content_wiki_entry(slug, title, summary, body_md, is_public, is_indexable, published_at, created_at, updated_at) "
                       + "VALUES(?, ?, ?, ?, TRUE, TRUE, NOW(), NOW(), NOW())",
-                  Statement.RETURN_GENERATED_KEYS);
+                  new String[] {"id"});
           ps.setString(1, req.getSlug());
           ps.setString(2, req.getTitle());
           ps.setString(3, req.getSummary());
@@ -291,4 +291,3 @@ public class WikiRepository {
     return out.stream().distinct().toList();
   }
 }
-

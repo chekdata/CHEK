@@ -41,3 +41,6 @@ MVP 先把两件事做扎实：
 - Auth/Gateway 接入：`/Users/jasonhong/Desktop/CHEK/docs/INTEGRATION_AUTH_GATEWAY.md`
 - CICD/GitOps：`/Users/jasonhong/Desktop/CHEK/docs/DEVOPS_DELIVERY.md`
 
+## 6. 本地联调
+
+- 本地 DEV（前后端 + Auth 注入）：`/Users/jasonhong/Desktop/CHEK/docs/LOCAL_DEV.md`

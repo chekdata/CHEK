@@ -32,7 +32,7 @@ public class MediaRepository {
               conn.prepareStatement(
                   "INSERT INTO chek_media_object(bucket, object_key, content_type, size_bytes, uploader_user_one_id, status, created_at, updated_at) "
                       + "VALUES(?, ?, ?, ?, ?, ?, NOW(), NOW())",
-                  Statement.RETURN_GENERATED_KEYS);
+                  new String[] {"id"});
           ps.setString(1, bucket);
           ps.setString(2, objectKey);
           ps.setString(3, contentType);

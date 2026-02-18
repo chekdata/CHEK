@@ -18,18 +18,14 @@
 
 ## 快速开始（本地）
 
-后端（本地 H2 即可跑通）：
+推荐用一键脚本（含 dev-gateway，用于在本地注入 `X-User-One-Id`，让发相辅/评论的写接口能联调跑通）：
 
 ```bash
-cd /Users/jasonhong/Desktop/CHEK/backend-CHEK-content && mvn spring-boot:run
-cd /Users/jasonhong/Desktop/CHEK/backend-CHEK-media && mvn spring-boot:run
-cd /Users/jasonhong/Desktop/CHEK/backend-CHEK-ai && mvn spring-boot:run
+bash /Users/jasonhong/Desktop/CHEK/scripts/dev-up.sh
 ```
 
-前端（Next.js）：
+关闭：
 
 ```bash
-cd /Users/jasonhong/Desktop/CHEK/frontend-CHEK
-npm i
-npm run dev
+bash /Users/jasonhong/Desktop/CHEK/scripts/dev-down.sh
 ```

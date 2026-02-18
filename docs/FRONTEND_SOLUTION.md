@@ -14,7 +14,7 @@
 
 - 框架：Next.js（App Router；SSR/SSG/ISR）
 - 语言：TypeScript + React
-- UI：NutUI（移动端）
+- UI：自研轻量组件（Liquid Glass 全局样式 + 组件化），避免引入过重 UI 框架（MVP 更快落地）
 - 内容渲染：Markdown（`body`）+ 自定义 block 解析（把正文里的“信息卡片块”渲染成卡片）
 - 请求层：统一 `Authorization: Bearer <sid_at>` 与错误处理（可复用你已有 request 封装思路）
 - 登录体系：直接对接 `backend-auth-saas`（见 auth OpenAPI）
@@ -30,6 +30,7 @@
 - `/wiki/[slug]`（百科详情：结构化正文 + 相关引用）
 - `/tag/[tagSlug]`（标签聚合：置顶百科 + 精选/可引用内容）
 - `/p/[postId]`（帖子内容页：仅 `isPublic && isIndexable` 才输出/索引）
+- `/letter`（致旅客的一封信：静态欢迎/道歉页）
 - `/sitemap.xml`、`/robots.txt`
 
 数据拉取建议：为 ISR/静态生成准备“公开只读 + 强缓存 + 可增量”的接口（例如 `chek-content` 的 `/v1/public/ssg/*`），避免构建时全量扫库。
@@ -44,6 +45,11 @@
 - （可选，P1）`/ai`（AI来）
 - （可选，P1）`/timeline`（劳热：时间线视图）
 - （可选，P1）`/map`（辣辣嗦：地图视图）
+
+首页欢迎（P0 必做）：
+
+- 首次注册/首次登录后：进入 `/feed` 弹出欢迎弹窗（真诚道歉 + “打开看看”跳转 `/letter`）。
+- `/feed` 顶部常驻 Banner：点击同样跳转 `/letter`。
 
 ## 3. 统一发帖：信息卡片写进正文（后端不另设字段）
 
@@ -111,7 +117,7 @@
 
 - `POST /api/auth/v1/wechat/login`
 - `POST /api/auth/v1/sms/send`
-- `POST /api/auth/v1/smsLogin`
+- `POST /api/auth/v1/accounts/smsLogin`
 - `GET /api/auth/v1/userInfo`
 - `GET /api/auth/v1/logout`
 
