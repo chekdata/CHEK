@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=375, height=812, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>有知 - 牌坊街怎么逛</title>
+    
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "潮州牌坊街游玩攻略",
+      "description": "潮州牌坊街全长1.6公里，包含22座牌坊。建议游玩时长2小时。避坑指南：购买特产建议去西马路。",
+      "dateModified": "2026-02-18"
+    }
+    </script>
+
+    <style>
+        :root {
+            --primary: #3388FF;
+            --secondary: #46EBD5;
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --safe-top: 44px;
+            --safe-bottom: 34px;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: -apple-system, sans-serif;
+            background: #F8F9FC;
+            color: #1D1D1F;
+            width: 375px; height: 812px;
+            overflow-x: hidden; position: relative;
+        }
+
+        /* 顶部渐变头图背景 */
+        .hero-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 300px;
+            background: linear-gradient(135deg, rgba(70,235,213,0.3) 0%, rgba(51,136,255,0.1) 100%);
+            mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+            z-index: 0;
+        }
+
+        /* 导航栏 */
+        .nav-bar {
+            position: fixed; top: 0; width: 100%; z-index: 100;
+            padding: var(--safe-top) 16px 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            /* 滚动后加背景 */
+            transition: background 0.3s;
+        }
+
+        /* 内容容器 */
+        .content-scroll {
+            position: relative; z-index: 1;
+            padding-top: calc(var(--safe-top) + 20px);
+            padding-bottom: 120px;
+            overflow-y: auto; height: 100vh;
+        }
+
+        .wiki-header { padding: 20px 24px; position: relative; }
+        .wiki-title { font-size: 28px; font-weight: 800; margin-bottom: 12px; line-height: 1.2; }
+        .tags-row { display: flex; gap: 8px; }
+        .tag { 
+            font-size: 12px; padding: 4px 10px; border-radius: 12px; 
+            background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.05);
+            backdrop-filter: blur(10px);
+        }
+
+        /* 吉祥物气泡 */
+        .cat-bubble {
+            position: absolute; right: 20px; top: 0;
+            background: #fff; padding: 8px 12px; border-radius: 12px 12px 0 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); font-size: 12px; font-weight: 600;
+            color: var(--primary); display: flex; align-items: center; gap: 6px;
+            animation: float 3s ease-in-out infinite;
+        }
+        .cat-img { width: 40px; position: absolute; right: -10px; bottom: -30px; }
+
+        @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-5px);} }
+
+        /* 可引用块 (SEO Key) */
+        .citation-block {
+            margin: 0 20px 24px; padding: 16px;
+            background: rgba(255, 255, 255, 0.6);
+            border-left: 4px solid var(--primary);
+            border-radius: 0 16px 16px 0;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+        }
+        .citation-title { font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .citation-text { font-size: 14px; line-height: 1.6; color: #333; }
+        .update-time { font-size: 11px; color: #999; margin-top: 8px; text-align: right; }
+
+        /* 正文段落 */
+        .section-card {
+            margin: 0 20px 20px; padding: 20px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.6);
+            box-shadow: 0 8px 24px -6px rgba(0,0,0,0.05);
+        }
+        .section-title { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+        .section-body { font-size: 15px; line-height: 1.7; color: #444; }
+
+        /* 相关相辅 */
+        .related-feed { margin-top: 32px; padding: 0 20px; }
+        .related-header { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+        
+        .mini-post {
+            display: flex; align-items: flex-start; gap: 12px;
+            padding: 12px; background: #fff; border-radius: 16px; margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+        .mini-avatar { width: 24px; height: 24px; border-radius: 50%; background: #ccc; flex-shrink: 0; }
+        .mini-content { flex: 1; }
+        .mini-text { font-size: 13px; color: #333; margin-bottom: 6px; line-height: 1.4; }
+        .mini-meta { font-size: 11px; color: #999; display: flex; gap: 8px; }
+
+        /* 底部操作栏 */
+        .bottom-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            padding: 12px 20px calc(12px + var(--safe-bottom));
+            background: rgba(255,255,255,0.8); backdrop-filter: blur(30px);
+            border-top: 1px solid rgba(255,255,255,0.5);
+            display: flex; gap: 12px; z-index: 200;
+        }
+        .action-btn {
+            height: 48px; border-radius: 24px; font-weight: 600; font-size: 15px;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            cursor: pointer;
+        }
+        .btn-share {
+            width: 100px; background: rgba(0,0,0,0.05); color: #333;
+        }
+        .btn-ask {
+            flex: 1; background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff; box-shadow: 0 8px 20px rgba(51, 136, 255, 0.25);
+        }
+
+        svg { width: 20px; height: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="hero-bg"></div>
+
+    <div class="nav-bar">
+        <div onclick="history.back()" style="width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.6); display:flex; align-items:center; justify-content:center;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </div>
+        <div style="width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.6); display:flex; align-items:center; justify-content:center;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        </div>
+    </div>
+
+    <div class="content-scroll">
+        <div class="wiki-header">
+            <h1 class="wiki-title">牌坊街怎么逛？<br>本地人路线推荐</h1>
+            <div class="tags-row">
+                <div class="tag"># 必玩景点</div>
+                <div class="tag"># 潮州古城</div>
+            </div>
+            
+            <div class="cat-bubble">
+                先看这里，别走冤枉路！
+                <svg class="cat-img" viewBox="0 0 100 100" fill="none">
+                    <circle cx="50" cy="50" r="40" fill="#333"/>
+                    <path d="M30 60 Q50 30 70 60" stroke="#fff" stroke-width="2"/> </svg>
+            </div>
+        </div>
+
+        <div class="citation-block">
+            <div class="citation-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+                要点摘要
+            </div>
+            <div class="citation-text">
+                建议游玩时长：2-3小时。<br>
+                最佳路线：从南门（广济楼）进，北门出。<br>
+                注意事项：主街商铺同质化严重，买特产建议去西马路或义安路。
+            </div>
+            <div class="update-time">更新于 2026.02.15</div>
+        </div>
+
+        <div class="section-card">
+            <h2 class="section-title">🗺️ 推荐路线</h2>
+            <div class="section-body">
+                大多数游客会选择从北门进，但其实从南门（广济楼）进体验更好。因为南门靠近广济桥，可以看完过河拆桥表演后直接逛街。<br><br>
+                沿途必看牌坊：状元坊、理学儒宗坊。
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2 class="section-title">⚠️ 避坑指南</h2>
+            <div class="section-body">
+                1. 街上有很多拉客去喝功夫茶的，如果是免费的可以喝，但推销茶叶请理智。<br>
+                2. 租汉服拍照建议多比价，均价在60-100元/小时（含妆造）。
+            </div>
+        </div>
+
+        <div class="related-feed">
+            <div class="related-header">大家怎么说</div>
+            
+            <div class="mini-post">
+                <div class="mini-avatar"></div>
+                <div class="mini-content">
+                    <div class="mini-text">亲测！南门进确实人少一点，而且拍照光线好。</div>
+                    <div class="mini-meta">
+                        <span>游客小王</span>
+                        <span>❤ 12</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mini-post">
+                <div class="mini-avatar" style="background:#888"></div>
+                <div class="mini-content">
+                    <div class="mini-text">补充一点，晚上去灯光有点暗，建议下午4点左右去。</div>
+                    <div class="mini-meta">
+                        <span>摄影师阿强</span>
+                        <span>❤ 8</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-bar">
+        <div class="action-btn btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            分享
+        </div>
+        <div class="action-btn btn-ask">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            发相辅问问大家
+        </div>
+    </div>
+
+</body>
+</html>
