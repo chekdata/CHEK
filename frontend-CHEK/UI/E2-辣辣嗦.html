@@ -2,36 +2,153 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>潮客 Chaoke - 地图</title>
+    <meta name="viewport" content="width=375, height=812, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>潮客 - 辣辣嗦 (地图)</title>
+    
     <style>
         :root {
-            --primary-color: #3388FF;
-            --secondary-color: #46EBD5;
-            --accent-color: #D377CD;
-            --bg-color: #FFFFFF;
-            --text-main: #000000;
-            --text-secondary: #666666;
+            --primary: #3388FF;
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --safe-top: 44px;
+            --safe-bottom: 34px;
         }
+
         body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Segoe UI, Arial, Roboto, 'PingFang SC', 'miui', 'Hiragino Sans GB', 'Microsoft Yahei', sans-serif;
-            background-color: var(--bg-color);
-            min-height: 100vh;
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
+            margin: 0; padding: 0;
+            font-family: -apple-system, sans-serif;
+            width: 375px; height: 812px; overflow: hidden;
+            background: #E5E9F2; /* Map Placeholder Color */
         }
-        .page-container {
-            padding: 16px;
-            max-width: 375px;
-            margin: 0 auto;
+
+        /* 1. 地图层 (模拟) */
+        .map-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" opacity="0.1"><path d="M10 10 H90 V90 H10 Z" fill="none" stroke="black"/></svg>');
+            z-index: 0;
         }
+        
+        /* 地图标记 (Marker) */
+        .map-marker {
+            position: absolute; width: 40px; height: 40px;
+            background: #fff; border-radius: 50% 50% 0 50%;
+            transform: rotate(45deg);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; z-index: 1;
+        }
+        .marker-icon { transform: rotate(-45deg); } /* Icon fix */
+
+        /* 2. 顶部搜索栏 (悬浮玻璃) */
+        .floating-search {
+            position: absolute; top: calc(var(--safe-top) + 10px); left: 16px; right: 16px;
+            height: 50px; border-radius: 25px;
+            background: var(--glass-bg); backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            display: flex; align-items: center; padding: 0 20px; gap: 10px;
+            z-index: 10;
+        }
+        .search-text { font-size: 15px; color: #666; flex: 1; }
+
+        /* 3. 侧边功能球 */
+        .fab-group {
+            position: absolute; right: 16px; bottom: 240px;
+            display: flex; flex-direction: column; gap: 12px; z-index: 10;
+        }
+        .fab-glass {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: var(--glass-bg); backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); color: #333;
+        }
+
+        /* 4. 底部信息面板 (Sheet) */
+        .bottom-sheet {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            height: 220px; background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(30px); border-radius: 32px 32px 0 0;
+            border-top: 1px solid rgba(255,255,255,0.8);
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
+            z-index: 20; padding: 20px 0;
+            display: flex; flex-direction: column;
+        }
+        
+        .sheet-handle {
+            width: 40px; height: 4px; background: #CCC; border-radius: 2px;
+            margin: 0 auto 16px;
+        }
+
+        .poi-scroll {
+            display: flex; gap: 12px; overflow-x: auto; padding: 0 20px;
+            scrollbar-width: none;
+        }
+        
+        .poi-card {
+            min-width: 140px; padding: 12px; border-radius: 16px;
+            background: #fff; border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .poi-img { width: 100%; height: 80px; background: #eee; border-radius: 12px; margin-bottom: 8px; object-fit: cover;}
+        .poi-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+        .poi-tag { font-size: 10px; color: var(--primary); background: rgba(51,136,255,0.1); padding: 2px 6px; border-radius: 4px; display: inline-block; }
+
+        /* 占位遮罩 (用于 MVP) */
+        .placeholder-mask {
+            position: absolute; inset: 0; background: rgba(255,255,255,0.4); backdrop-filter: blur(5px);
+            z-index: 5; display: flex; align-items: center; justify-content: center;
+            flex-direction: column;
+        }
+        
+        svg { width: 20px; height: 20px; }
     </style>
 </head>
 <body>
-    <div class="page-container">
-        <!-- E2 地图页 -->
+
+    <div class="map-layer"></div>
+
+    <div class="map-marker" style="top:40%; left:50%; background:var(--primary); color:#fff;">
+        <div class="marker-icon">📍</div>
     </div>
-</body>
+
+    <div class="floating-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span class="search-text">搜：公厕 / 停车场...</span>
+    </div>
+
+    <div class="fab-group">
+        <div class="fab-glass">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+        </div>
+        <div class="fab-glass">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>
+        </div>
+    </div>
+
+    <div class="bottom-sheet">
+        <div class="sheet-handle"></div>
+        <div style="padding: 0 20px 12px;">
+            <div style="font-size:16px; font-weight:700;">附近推荐</div>
+        </div>
+        <div class="poi-scroll">
+            <div class="poi-card">
+                <div class="poi-img"></div>
+                <div class="poi-title">开元寺公厕</div>
+                <div class="poi-tag">免费</div>
+            </div>
+            <div class="poi-card">
+                <div class="poi-img" style="background:#ddd;"></div>
+                <div class="poi-title">西马路老店</div>
+                <div class="poi-tag">美食</div>
+            </div>
+            <div class="poi-card">
+                <div class="poi-img" style="background:#ccc;"></div>
+                <div class="poi-title">韩师停车场</div>
+                <div class="poi-tag">车位充足</div>
+            </div>
+        </div>
+    </div>
+
+    </body>
 </html>

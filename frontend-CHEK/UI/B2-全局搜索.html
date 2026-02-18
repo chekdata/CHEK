@@ -2,141 +2,112 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=375, height=812, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>潮客 - 全局搜索</title>
     <style>
+        /* 复用部分根变量 */
         :root {
             --primary: #3388FF;
-            --text-main: #1D1D1F;
-            --text-sub: #86868B;
-            --bg-body: #FFFFFF;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: -apple-system, sans-serif; 
-            background: var(--bg-body); 
-            padding: 16px;
-            color: var(--text-main);
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --safe-top: 44px;
         }
 
-        /* SVG Utils */
-        svg { display: block; }
-        .icon-sm { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        body {
+            margin: 0; padding: 0;
+            font-family: -apple-system, sans-serif;
+            background: #F8F9FC;
+            overflow: hidden;
+            width: 375px; height: 812px;
+        }
 
-        .search-header {
-            display: flex; align-items: center; gap: 12px; margin-bottom: 24px;
-            padding-top: env(safe-area-inset-top);
+        .liquid-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: #F5F7FA;
         }
-        .search-input-box {
-            flex: 1; height: 44px; background: #F2F2F7;
-            border-radius: 22px; display: flex; align-items: center; padding: 0 16px;
-            color: var(--text-sub); transition: all 0.3s;
+        .orb {
+            position: absolute; border-radius: 50%; filter: blur(50px); opacity: 0.5;
         }
-        .search-input-box:focus-within { background: #E5E5EA; color: var(--text-main); }
+
+        .header {
+            padding: var(--safe-top) 16px 12px;
+            display: flex; gap: 12px; align-items: center;
+            background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
+        }
+
+        .search-field {
+            flex: 1; height: 44px; border-radius: 22px;
+            background: rgba(255,255,255,0.5); border: 1px solid var(--glass-border);
+            display: flex; align-items: center; padding: 0 16px; gap: 8px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .search-input {
+            border: none; background: transparent; outline: none;
+            font-size: 16px; width: 100%; color: #333;
+        }
         
-        .search-input-box input {
-            border: none; background: transparent; outline: none; flex: 1; 
-            margin: 0 8px; font-size: 16px; color: var(--text-main);
-            caret-color: var(--primary);
-        }
+        .cancel-text { font-size: 16px; color: var(--primary); font-weight: 600; }
+
+        /* 内容区 */
+        .content { padding: 20px 16px; }
         
-        .cancel-btn { color: var(--primary); font-size: 16px; font-weight: 500; cursor: pointer; }
-
-        .section-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 16px; margin-top: 24px;
-        }
-        .section-title { font-size: 15px; font-weight: 700; }
-        .action-icon { color: var(--text-sub); opacity: 0.6; }
-
-        .tags-flow { display: flex; flex-wrap: wrap; gap: 10px; }
-        .tag-chip {
-            padding: 8px 16px; background: #F7F8FA; border-radius: 8px;
-            font-size: 13px; color: var(--text-main);
-            transition: background 0.2s;
-        }
-        .tag-chip:active { background: #EAEAEA; }
+        .section-title { font-size: 14px; font-weight: 700; color: #1D1D1F; margin-bottom: 16px; opacity: 0.6; }
         
-        .tag-chip.hot { 
-            color: #FF2D55; background: rgba(255, 45, 85, 0.08); 
-            display: flex; align-items: center; gap: 4px;
+        .hot-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+        .hot-chip {
+            padding: 8px 16px; background: rgba(255,255,255,0.6); border-radius: 12px;
+            font-size: 14px; color: #333; border: 1px solid rgba(255,255,255,0.5);
         }
+        .hot-chip.fire { color: #FF4D4F; background: rgba(255, 77, 79, 0.08); }
 
-        /* 空状态 Illustration */
+        /* 空态 */
         .empty-state {
-            margin-top: 80px;
-            display: flex; flex-direction: column; align-items: center;
-            color: var(--text-sub);
+            margin-top: 80px; display: flex; flex-direction: column; align-items: center; text-align: center;
         }
-        .cat-illustration {
-            width: 120px; height: 120px; margin-bottom: 24px;
-            color: #E5E5EA; /* 默认颜色 */
-        }
+        .mascot-svg { width: 120px; height: 120px; opacity: 0.8; margin-bottom: 20px; }
+        .empty-text { font-size: 14px; color: #999; line-height: 1.5; }
+
+        svg { width: 20px; height: 20px; }
     </style>
 </head>
 <body>
+    <div class="liquid-bg">
+        <div class="orb" style="width:200px; height:200px; background:#46EBD5; top:-50px; right:-50px;"></div>
+    </div>
 
-    <div class="search-header">
-        <div class="search-input-box">
-            <svg class="icon-sm" viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            
-            <input type="text" placeholder="牛肉丸 / 住宿推荐" value="停车">
-            
-            <svg class="icon-sm" viewBox="0 0 24 24" style="cursor:pointer; opacity:0.6;">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
+    <div class="header">
+        <div class="search-field">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="search-input" placeholder="牛肉丸 / 住宿 / 交通" autofocus>
         </div>
-        <div class="cancel-btn">取消</div>
+        <div class="cancel-text">取消</div>
     </div>
 
-    <div class="section-header">
-        <span class="section-title">历史搜索</span>
-        <svg class="icon-sm action-icon" viewBox="0 0 24 24" style="width:16px;height:16px;">
-            <polyline points="3 6 5 6 21 6"></polyline>
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-        </svg>
-    </div>
-    <div class="tags-flow">
-        <div class="tag-chip">南澳岛路况</div>
-        <div class="tag-chip">肠粉</div>
-    </div>
-
-    <div class="section-header">
-        <span class="section-title">🔥 极客热搜</span>
-    </div>
-    <div class="tags-flow">
-        <div class="tag-chip hot">
-            <svg class="icon-sm" viewBox="0 0 24 24" style="width:14px;height:14px; fill:currentColor; stroke:none;">
-                <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.1.2-2.1.5-3z"></path>
-            </svg>
-            酒店恶意加价
+    <div class="content">
+        <div id="hot-search-view">
+            <div class="section-title">大家都在搜</div>
+            <div class="hot-chips">
+                <div class="hot-chip fire">🔥 镇邦美食街</div>
+                <div class="hot-chip">英歌舞时间表</div>
+                <div class="hot-chip">南澳岛路况</div>
+                <div class="hot-chip">免费停车</div>
+            </div>
         </div>
-        <div class="tag-chip hot">
-            <svg class="icon-sm" viewBox="0 0 24 24" style="width:14px;height:14px; fill:currentColor; stroke:none;">
-                <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.1.2-2.1.5-3z"></path>
+
+        <div class="empty-state" style="display:none;">
+            <svg class="mascot-svg" viewBox="0 0 100 100" fill="none" stroke="#333" stroke-width="2">
+                <circle cx="50" cy="50" r="40" fill="#fff" opacity="0.5"/>
+                <path d="M30 40 L20 20 L40 25 Q50 22 60 25 L80 20 L70 40" stroke-linecap="round"/>
+                <circle cx="35" cy="55" r="4" fill="#333"/>
+                <circle cx="65" cy="55" r="4" fill="#333"/>
+                <rect x="25" y="70" width="50" height="25" rx="5" fill="#fff" stroke="#333"/>
+                <text x="50" y="86" font-size="8" text-anchor="middle" stroke="none" fill="#333">没找到喵...</text>
             </svg>
-            极客节接驳车
+            <div class="empty-text">
+                换个关键词试试？<br>
+                欢迎你来潮汕，有需要尽管说。
+            </div>
         </div>
-        <div class="tag-chip">潮州古城停车</div>
-        <div class="tag-chip">牛肉火锅排队</div>
     </div>
-
-    <div class="empty-state">
-        <svg class="cat-illustration" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M30 40 L20 20 L40 25 Q50 22 60 25 L80 20 L70 40 Q85 50 85 65 A 25 25 0 0 1 15 65 Q15 50 30 40" />
-            <circle cx="35" cy="55" r="4" fill="currentColor" stroke="none"/>
-            <circle cx="65" cy="55" r="4" fill="currentColor" stroke="none"/>
-            <path d="M47 62 L50 65 L53 62" stroke-width="2"/>
-            <circle cx="65" cy="75" r="15" stroke-dasharray="4 2"/>
-            <line x1="75" y1="85" x2="85" y2="95" />
-        </svg>
-        <p>没有找到相关内容喵...</p>
-        <p style="font-size:12px; margin-top:8px; opacity:0.6;">换个关键词试试？</p>
-    </div>
-
 </body>
 </html>

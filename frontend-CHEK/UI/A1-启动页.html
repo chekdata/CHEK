@@ -2,122 +2,118 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>潮客 Chaoke - 启动页</title>
+    <meta name="viewport" content="width=375, height=812, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>潮客 CHEK - 启动</title>
     <style>
         :root {
-            --primary-color: #3388FF;
-            --secondary-color: #46EBD5;
-            --accent-color: #D377CD;
+            --primary: #3388FF;
+            --secondary: #46EBD5;
+            --accent: #D377CD;
             --bg-color: #FFFFFF;
             --text-main: #000000;
-            --text-secondary: #666666;
+            --glass-border: rgba(255, 255, 255, 0.6);
         }
+
         body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Segoe UI, Arial, Roboto, 'PingFang SC', 'miui', 'Hiragino Sans GB', 'Microsoft Yahei', sans-serif;
-            background-color: var(--bg-color);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
+            margin: 0; padding: 0;
+            width: 375px; height: 812px;
+            background: var(--bg-color);
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
             overflow: hidden;
-        }
-        .splash-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
             position: relative;
-            width: 100%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
         }
-        .glow-effect {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(70,235,213,0.4) 0%, rgba(51,136,255,0.3) 50%, rgba(211,119,205,0.1) 100%);
-            filter: blur(40px);
+
+        /* 液态背景光斑 */
+        .orb {
+            position: absolute; border-radius: 50%;
+            filter: blur(60px); opacity: 0.6;
             z-index: 0;
+            animation: float 10s infinite ease-in-out;
         }
-        .mascot {
-            width: 180px;
-            height: auto;
-            z-index: 1;
-            /* 替换为您的3D黑色大眼猫图片 */
-            background-image: url('https://via.placeholder.com/180x180/000000/FFFFFF?text=3D+Mascot');
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            filter: drop-shadow(0 0 10px rgba(51, 136, 255, 0.5));
+        .orb-1 { width: 300px; height: 300px; background: var(--primary); top: -10%; left: -20%; animation-delay: 0s; opacity: 0.2; }
+        .orb-2 { width: 250px; height: 250px; background: var(--secondary); bottom: 10%; right: -10%; animation-delay: -5s; opacity: 0.2; }
+        .orb-3 { width: 100px; height: 100px; background: var(--accent); top: 40%; left: 30%; animation-delay: -2s; opacity: 0.15; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(20px, -20px) scale(1.1); }
+            100% { transform: translate(0, 0) scale(1); }
         }
-        .brand-info {
-            text-align: center;
-            z-index: 1;
-            margin-top: 20px;
+
+        /* 主体内容 */
+        .content { z-index: 10; text-align: center; display: flex; flex-direction: column; align-items: center; }
+
+        .mascot-container {
+            width: 180px; height: 180px;
+            margin-bottom: 40px;
+            position: relative;
+            animation: breathe 4s infinite ease-in-out;
         }
-        .logo-text {
-            font-size: 32px;
-            font-weight: 800;
-            color: var(--text-main);
-            letter-spacing: 2px;
+        
+        .mascot-img {
+            width: 100%; height: 100%; object-fit: contain;
+            /* 模拟3D投影 */
+            filter: drop-shadow(0 20px 30px rgba(51, 136, 255, 0.2));
         }
+
+        .logo-img { width: 120px; height: auto; margin-bottom: 12px; }
+        
         .slogan {
-            font-size: 16px;
-            color: var(--text-secondary);
-            margin-top: 8px;
-            letter-spacing: 1px;
+            font-size: 16px; letter-spacing: 4px; color: #1D1D1F;
+            font-weight: 400; opacity: 0.8; margin-top: 8px;
         }
+
+        /* 底部 */
         .footer {
-            width: 100%;
-            text-align: center;
-            padding-bottom: calc(20px + env(safe-area-inset-bottom));
+            position: absolute; bottom: 40px; width: 100%;
+            text-align: center; z-index: 10; padding: 0 40px;
         }
+
         .support-text {
-            font-size: 12px;
-            color: #999999;
-            margin-bottom: 16px;
+            font-size: 10px; color: #999; margin-bottom: 20px; letter-spacing: 0.5px;
         }
+
+        .progress-container {
+            width: 100%; height: 4px; background: rgba(0,0,0,0.05);
+            border-radius: 2px; overflow: hidden;
+        }
+        
         .progress-bar {
-            width: 120px;
-            height: 4px;
-            background-color: #F0F0F0;
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
             border-radius: 2px;
-            margin: 0 auto;
-            overflow: hidden;
+            box-shadow: 0 0 10px var(--primary);
+            animation: load 2.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
-        .progress-bar-inner {
-            height: 100%;
-            background-color: var(--primary-color);
-            width: 30%; /* 加载进度 */
-            border-radius: 2px;
-            animation: progressAnimation 2s linear infinite;
-        }
-        @keyframes progressAnimation {
-            0% { width: 0; }
-            100% { width: 100%; }
-        }
+
+        @keyframes breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes load { 0% { width: 0; } 100% { width: 80%; } }
+
     </style>
 </head>
 <body>
-    <div class="splash-container">
-        <div class="glow-effect"></div>
-        <div class="mascot" style="height: 180px;"></div>
-        <div class="brand-info">
-            <div class="logo-text">潮客 CHEK</div>
-            <div class="slogan">一起把潮汕讲清楚</div>
+
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="content">
+        <div class="mascot-container">
+            <img src="frontend-CHEK/assets/IP/空状态-通用.png" class="mascot-img" alt="Mascot">
         </div>
+        
+        <img src="/Users/jasonhong/Desktop/CHEK/frontend-CHEK/assets/LOGO.png" class="logo-img" alt="潮客 CHEK">
+        <div class="slogan">一起把潮汕讲清楚</div>
     </div>
+
     <div class="footer">
         <div class="support-text">本项目为首届‘北回归线极客节’支持项目</div>
-        <div class="progress-bar">
-            <div class="progress-bar-inner"></div>
+        <div class="progress-container">
+            <div class="progress-bar"></div>
         </div>
     </div>
+
 </body>
 </html>

@@ -2,144 +2,133 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>潮客 - 发帖选择</title>
+    <meta name="viewport" content="width=375, height=812, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>来相辅 - 发布帖子</title>
     <style>
         :root {
             --primary: #3388FF;
             --secondary: #46EBD5;
-            --accent: #D377CD;
-            --bg-body: #FFFFFF;
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --safe-top: 44px;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: -apple-system, sans-serif;
-            background: var(--bg-body);
-            padding: 20px;
+            margin: 0; padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+            background: #F8F9FC;
+            height: 100vh; display: flex; flex-direction: column;
         }
 
+        /* 头部 */
         .header {
-            margin-top: env(safe-area-inset-top);
-            margin-bottom: 24px;
+            padding: var(--safe-top) 16px 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.8); backdrop-filter: blur(10px);
         }
-        .title { font-size: 28px; font-weight: 800; color: #1D1D1F; margin-bottom: 4px; }
-        .subtitle { font-size: 14px; color: #86868B; }
-        .close-btn { position: absolute; top: 20px; right: 20px; padding: 10px; }
-
-        /* Grid Layout */
-        .type-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+        .header-title { font-size: 17px; font-weight: 700; }
+        .tips-btn {
+            font-size: 13px; color: var(--primary); display: flex; align-items: center; gap: 4px;
+            background: rgba(51,136,255,0.1); padding: 6px 12px; border-radius: 16px;
         }
 
-        .type-card {
-            aspect-ratio: 0.9;
-            border-radius: 24px;
-            padding: 20px;
-            position: relative;
-            display: flex; flex-direction: column; justify-content: space-between;
-            transition: transform 0.2s;
-            overflow: hidden;
-            border: 1px solid rgba(0,0,0,0.03);
-        }
-        .type-card:active { transform: scale(0.98); }
+        /* 编辑区 */
+        .editor-area { flex: 1; padding: 24px 20px; overflow-y: auto; }
 
-        /* Card Variants */
-        .card-supply { background: linear-gradient(135deg, #E6F0FF 0%, #F0F8FF 100%); }
-        .card-supply .icon-box { color: #3388FF; background: rgba(255,255,255,0.8); }
-        
-        .card-demand { background: linear-gradient(135deg, #E0FFFA 0%, #F0FFF4 100%); }
-        .card-demand .icon-box { color: #00BFA5; background: rgba(255,255,255,0.8); }
-
-        .card-report { background: linear-gradient(135deg, #FFF0F5 0%, #FFF5F7 100%); }
-        .card-report .icon-box { color: #D377CD; background: rgba(255,255,255,0.8); }
-
-        .card-verify { background: linear-gradient(135deg, #FFF8E1 0%, #FFFDE7 100%); }
-        .card-verify .icon-box { color: #FFA000; background: rgba(255,255,255,0.8); }
-
-        /* Card Content */
-        .icon-box {
-            width: 44px; height: 44px; border-radius: 14px;
-            display: flex; align-items: center; justify-content: center;
-            margin-bottom: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        .input-title {
+            width: 100%; border: none; background: transparent;
+            font-size: 20px; font-weight: 700; margin-bottom: 20px; outline: none;
         }
         
-        .card-title { font-size: 17px; font-weight: 700; color: #1D1D1F; margin-bottom: 4px; }
-        .card-desc { font-size: 12px; color: #666; line-height: 1.4; }
-
-        /* Mascot Decor (SVG) */
-        .mascot-decor {
-            position: absolute; right: -10px; bottom: -10px;
-            width: 80px; height: 80px; opacity: 0.8;
-            transform: rotate(-10deg);
+        .input-body {
+            width: 100%; min-height: 150px; border: none; background: transparent;
+            font-size: 16px; line-height: 1.6; outline: none; resize: none;
+            color: #333; margin-bottom: 30px;
         }
 
+        /* 媒体上传 */
+        .media-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 20px; }
+        .upload-box {
+            width: 100px; height: 100px; border-radius: 20px; background: #FFF;
+            border: 1px dashed #CCC; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; color: #999; flex-shrink: 0;
+        }
+
+        /* 底部工具栏 (Glass) */
+        .bottom-toolbar {
+            background: rgba(255,255,255,0.85); 
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255,255,255,0.5);
+            padding: 16px 20px 40px;
+            border-radius: 32px 32px 0 0;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.05);
+        }
+        
+        .tool-row { display: flex; gap: 12px; margin-bottom: 20px; }
+        .tool-chip {
+            padding: 8px 16px; background: #F2F4F8; border-radius: 20px;
+            font-size: 13px; color: #333; display: flex; align-items: center; gap: 6px;
+            border: 1px solid transparent;
+        }
+        .tool-chip.active { background: rgba(51, 136, 255, 0.1); color: var(--primary); border-color: rgba(51, 136, 255, 0.2); }
+
+        .publish-row { display: flex; gap: 16px; align-items: center; }
+        .draft-btn { 
+            width: 100px; height: 52px; border-radius: 26px; border: 1px solid #eee; 
+            background: rgba(255,255,255,0.5); color: #666; font-weight: 600;
+        }
+        .pub-btn {
+            flex: 1; height: 52px; border-radius: 26px; border: none;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff; font-size: 16px; font-weight: 600;
+            box-shadow: 0 8px 20px rgba(51,136,255,0.3);
+        }
+
+        svg { width: 20px; height: 20px; }
     </style>
 </head>
 <body>
 
-    <div class="close-btn">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-    </div>
-
     <div class="header">
-        <h1 class="title">发布</h1>
-        <p class="subtitle">选择你要发布的内容类型</p>
+        <div onclick="history.back()" style="font-size:16px;">取消</div>
+        <div class="header-title">来相辅</div>
+        <div class="tips-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            小贴士
+        </div>
     </div>
 
-    <div class="type-grid">
-        <div class="type-card card-supply">
-            <div>
-                <div class="icon-box">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
-                </div>
-                <div class="card-title">接送供给</div>
-                <div class="card-desc">我是志愿者，我有空位可以载人</div>
+    <div class="editor-area">
+        <div class="media-scroll">
+            <div class="upload-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                <span style="font-size:11px; margin-top:4px;">加图/视频</span>
             </div>
-            <svg class="mascot-decor" viewBox="0 0 100 100" fill="none" stroke="#3388FF" stroke-width="2">
-                <circle cx="50" cy="50" r="40" stroke-opacity="0.1" fill="white" fill-opacity="0.2"/>
-                <path d="M30 50 Q50 30 70 50" stroke-linecap="round"/>
-                <circle cx="35" cy="45" r="3" fill="#3388FF"/>
-                <circle cx="65" cy="45" r="3" fill="#3388FF"/>
-            </svg>
         </div>
 
-        <div class="type-card card-demand">
-            <div>
-                <div class="icon-box">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                </div>
-                <div class="card-title">接送需求</div>
-                <div class="card-desc">我需要用车，求助志愿者</div>
+        <input type="text" class="input-title" placeholder="填写标题会有更多人看">
+        <textarea class="input-body" placeholder="分享你的潮汕见闻...&#10;说清时间地点能帮到更多人。&#10;如有冒犯，请多包涵。"></textarea>
+    </div>
+
+    <div class="bottom-toolbar">
+        <div class="tool-row">
+            <div class="tool-chip active">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                # 避坑
             </div>
-             <svg class="mascot-decor" viewBox="0 0 100 100" fill="none" stroke="#00BFA5" stroke-width="2">
-                 <path d="M50 80 Q20 80 20 50 Q20 20 50 20 Q80 20 80 50" />
-                 <text x="60" y="40" font-size="20">?</text>
-            </svg>
+            <div class="tool-chip">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                添加地点
+            </div>
+            <div class="tool-chip">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                发生时间
+            </div>
         </div>
 
-        <div class="type-card card-report">
-            <div>
-                <div class="icon-box">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                </div>
-                <div class="card-title">价格举报</div>
-                <div class="card-desc">遇到价格刺客？曝光它！</div>
-            </div>
-            <svg class="mascot-decor" viewBox="0 0 100 100" fill="none" stroke="#D377CD" stroke-width="2">
-                 <circle cx="50" cy="50" r="30" />
-                 <line x1="72" y1="72" x2="85" y2="85" stroke-width="4"/>
-            </svg>
-        </div>
-
-        <div class="type-card card-verify">
-            <div>
-                <div class="icon-box">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                </div>
-                <div class="card-title">价格求证</div>
-                <div class="card-desc">不确定是否被坑？发出来问问</div>
-            </div>
+        <div class="publish-row">
+            <button class="draft-btn">存草稿</button>
+            <button class="pub-btn">发布</button>
         </div>
     </div>
 
