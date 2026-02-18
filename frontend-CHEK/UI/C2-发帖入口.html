@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>潮客 - 发帖选择</title>
+    <style>
+        :root {
+            --primary: #3388FF;
+            --secondary: #46EBD5;
+            --accent: #D377CD;
+            --bg-body: #FFFFFF;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, sans-serif;
+            background: var(--bg-body);
+            padding: 20px;
+        }
+
+        .header {
+            margin-top: env(safe-area-inset-top);
+            margin-bottom: 24px;
+        }
+        .title { font-size: 28px; font-weight: 800; color: #1D1D1F; margin-bottom: 4px; }
+        .subtitle { font-size: 14px; color: #86868B; }
+        .close-btn { position: absolute; top: 20px; right: 20px; padding: 10px; }
+
+        /* Grid Layout */
+        .type-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+        }
+
+        .type-card {
+            aspect-ratio: 0.9;
+            border-radius: 24px;
+            padding: 20px;
+            position: relative;
+            display: flex; flex-direction: column; justify-content: space-between;
+            transition: transform 0.2s;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+        .type-card:active { transform: scale(0.98); }
+
+        /* Card Variants */
+        .card-supply { background: linear-gradient(135deg, #E6F0FF 0%, #F0F8FF 100%); }
+        .card-supply .icon-box { color: #3388FF; background: rgba(255,255,255,0.8); }
+        
+        .card-demand { background: linear-gradient(135deg, #E0FFFA 0%, #F0FFF4 100%); }
+        .card-demand .icon-box { color: #00BFA5; background: rgba(255,255,255,0.8); }
+
+        .card-report { background: linear-gradient(135deg, #FFF0F5 0%, #FFF5F7 100%); }
+        .card-report .icon-box { color: #D377CD; background: rgba(255,255,255,0.8); }
+
+        .card-verify { background: linear-gradient(135deg, #FFF8E1 0%, #FFFDE7 100%); }
+        .card-verify .icon-box { color: #FFA000; background: rgba(255,255,255,0.8); }
+
+        /* Card Content */
+        .icon-box {
+            width: 44px; height: 44px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .card-title { font-size: 17px; font-weight: 700; color: #1D1D1F; margin-bottom: 4px; }
+        .card-desc { font-size: 12px; color: #666; line-height: 1.4; }
+
+        /* Mascot Decor (SVG) */
+        .mascot-decor {
+            position: absolute; right: -10px; bottom: -10px;
+            width: 80px; height: 80px; opacity: 0.8;
+            transform: rotate(-10deg);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="close-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </div>
+
+    <div class="header">
+        <h1 class="title">发布</h1>
+        <p class="subtitle">选择你要发布的内容类型</p>
+    </div>
+
+    <div class="type-grid">
+        <div class="type-card card-supply">
+            <div>
+                <div class="icon-box">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                </div>
+                <div class="card-title">接送供给</div>
+                <div class="card-desc">我是志愿者，我有空位可以载人</div>
+            </div>
+            <svg class="mascot-decor" viewBox="0 0 100 100" fill="none" stroke="#3388FF" stroke-width="2">
+                <circle cx="50" cy="50" r="40" stroke-opacity="0.1" fill="white" fill-opacity="0.2"/>
+                <path d="M30 50 Q50 30 70 50" stroke-linecap="round"/>
+                <circle cx="35" cy="45" r="3" fill="#3388FF"/>
+                <circle cx="65" cy="45" r="3" fill="#3388FF"/>
+            </svg>
+        </div>
+
+        <div class="type-card card-demand">
+            <div>
+                <div class="icon-box">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </div>
+                <div class="card-title">接送需求</div>
+                <div class="card-desc">我需要用车，求助志愿者</div>
+            </div>
+             <svg class="mascot-decor" viewBox="0 0 100 100" fill="none" stroke="#00BFA5" stroke-width="2">
+                 <path d="M50 80 Q20 80 20 50 Q20 20 50 20 Q80 20 80 50" />
+                 <text x="60" y="40" font-size="20">?</text>
+            </svg>
+        </div>
+
+        <div class="type-card card-report">
+            <div>
+                <div class="icon-box">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                </div>
+                <div class="card-title">价格举报</div>
+                <div class="card-desc">遇到价格刺客？曝光它！</div>
+            </div>
+            <svg class="mascot-decor" viewBox="0 0 100 100" fill="none" stroke="#D377CD" stroke-width="2">
+                 <circle cx="50" cy="50" r="30" />
+                 <line x1="72" y1="72" x2="85" y2="85" stroke-width="4"/>
+            </svg>
+        </div>
+
+        <div class="type-card card-verify">
+            <div>
+                <div class="icon-box">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                </div>
+                <div class="card-title">价格求证</div>
+                <div class="card-desc">不确定是否被坑？发出来问问</div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>潮客 - 标签聚合</title>
+    <style>
+        :root {
+            --primary: #3388FF;
+            --accent: #D377CD;
+            --bg-body: #F7F8FA;
+            --text-main: #1D1D1F;
+        }
+        body {
+            margin: 0; padding: 0; background: var(--bg-body);
+            font-family: -apple-system, "PingFang SC", sans-serif;
+            color: var(--text-main);
+        }
+
+        /* SVG Utils */
+        svg { display: block; }
+        .icon { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+        /* Header */
+        .tag-header {
+            background: #fff; padding: calc(12px + env(safe-area-inset-top)) 20px 0;
+            position: sticky; top: 0; z-index: 100;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .nav-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        
+        .follow-btn {
+            background: #1D1D1F; color: #fff; border-radius: 99px;
+            padding: 6px 16px; font-size: 13px; font-weight: 600;
+            display: flex; align-items: center; gap: 4px;
+        }
+
+        .tag-title { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 20px; }
+        
+        /* Tabs */
+        .sub-tabs { display: flex; gap: 32px; padding-bottom: 12px; }
+        .sub-tab { 
+            font-size: 15px; color: #86868B; position: relative; padding-bottom: 8px; cursor: pointer;
+        }
+        .sub-tab.active { color: #1D1D1F; font-weight: 600; }
+        .sub-tab.active::after {
+            content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 20px; height: 3px; background: var(--primary); border-radius: 2px;
+        }
+
+        /* Scroll Content */
+        .content-scroll { padding: 16px; }
+
+        /* Wiki Card */
+        .wiki-card {
+            background: linear-gradient(135deg, #FFFFFF 0%, #F0F8FF 100%);
+            border: 1px solid rgba(51, 136, 255, 0.1);
+            border-radius: 20px; padding: 20px; margin-bottom: 20px;
+            position: relative; overflow: hidden;
+            box-shadow: 0 8px 20px rgba(51, 136, 255, 0.08);
+        }
+        .wiki-icon-bg {
+            position: absolute; right: -10px; bottom: -10px; opacity: 0.05;
+            transform: rotate(-15deg); color: var(--primary);
+        }
+
+        .wiki-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .wiki-badge {
+            background: rgba(51, 136, 255, 0.1); color: var(--primary);
+            font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px;
+        }
+        
+        .wiki-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+        .wiki-price { font-size: 24px; color: #FF3B30; font-weight: 800; margin-bottom: 12px; display: flex; align-items: baseline; gap: 4px; }
+        .wiki-price span { font-size: 14px; font-weight: 400; color: #666; }
+        
+        .wiki-desc { font-size: 13px; color: #555; line-height: 1.6; margin-bottom: 16px; }
+        
+        .wiki-source { 
+            font-size: 11px; color: #999; display: flex; align-items: center; gap: 6px; 
+            border-top: 1px solid rgba(0,0,0,0.05); padding-top: 12px;
+        }
+
+        /* Feed Card (Simple) */
+        .feed-card {
+            background: #fff; padding: 16px; border-radius: 16px; margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+        .user-mini { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .avatar-mini { width: 24px; height: 24px; border-radius: 50%; background: #eee; }
+        .name-mini { font-size: 13px; font-weight: 600; color: #333; }
+        .text-mini { font-size: 14px; line-height: 1.5; color: #333; }
+
+    </style>
+</head>
+<body>
+
+    <div class="tag-header">
+        <div class="nav-row">
+            <svg class="icon" viewBox="0 0 24 24" onclick="history.back()" style="cursor:pointer">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            
+            <div class="follow-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                关注标签
+            </div>
+        </div>
+        
+        <div class="tag-title"># 甘草水果</div>
+        
+        <div class="sub-tabs">
+            <div class="sub-tab active">综合</div>
+            <div class="sub-tab">仅看百科</div>
+            <div class="sub-tab">最新吐槽</div>
+        </div>
+    </div>
+
+    <div class="content-scroll">
+        
+        <div class="wiki-card">
+            <svg class="icon wiki-icon-bg" width="120" height="120" viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+
+            <div class="wiki-header">
+                <svg class="icon" viewBox="0 0 24 24" style="width:16px; height:16px; color:var(--primary);">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+                <span class="wiki-badge">潮客百科 · 价格公示</span>
+            </div>
+
+            <h3 class="wiki-title">甘草水果 (什锦)</h3>
+            <div class="wiki-price">¥15 - ¥35 <span>/ 斤</span></div>
+            
+            <p class="wiki-desc">
+                ⚠️ 正常市场价区间。若遇到按“两”报价（如¥8/两）请警惕“切糕刺客”骗局。建议购买前明确计价单位。
+            </p>
+            
+            <div class="wiki-source">
+                <svg class="icon" viewBox="0 0 24 24" style="width:14px; height:14px; color:#4CD964;">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                数据来源：潮州市市场监督管理局 (2026.02)
+            </div>
+        </div>
+
+        <div style="font-size:13px; color:#999; margin-bottom:12px; font-weight:600;">最新讨论</div>
+
+        <div class="feed-card">
+            <div class="user-mini">
+                <div class="avatar-mini"></div>
+                <div class="name-mini">吃货小美</div>
+            </div>
+            <div class="text-mini">
+                牌坊街那家XXX水果店还可以，明码标价25一斤，味道很正！推荐青芒和芭乐！
+            </div>
+        </div>
+
+        <div class="feed-card">
+            <div class="user-mini">
+                <div class="avatar-mini" style="background:#333;"></div>
+                <div class="name-mini">避雷队长</div>
+            </div>
+            <div class="text-mini">
+                千万别去路口推车那种！问价格不说清楚，切完才说50一斤，坑死人！<span style="color:#D377CD">#避坑</span>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

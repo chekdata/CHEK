@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>潮客 - 全局搜索</title>
+    <style>
+        :root {
+            --primary: #3388FF;
+            --text-main: #1D1D1F;
+            --text-sub: #86868B;
+            --bg-body: #FFFFFF;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, sans-serif; 
+            background: var(--bg-body); 
+            padding: 16px;
+            color: var(--text-main);
+        }
+
+        /* SVG Utils */
+        svg { display: block; }
+        .icon-sm { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+        .search-header {
+            display: flex; align-items: center; gap: 12px; margin-bottom: 24px;
+            padding-top: env(safe-area-inset-top);
+        }
+        .search-input-box {
+            flex: 1; height: 44px; background: #F2F2F7;
+            border-radius: 22px; display: flex; align-items: center; padding: 0 16px;
+            color: var(--text-sub); transition: all 0.3s;
+        }
+        .search-input-box:focus-within { background: #E5E5EA; color: var(--text-main); }
+        
+        .search-input-box input {
+            border: none; background: transparent; outline: none; flex: 1; 
+            margin: 0 8px; font-size: 16px; color: var(--text-main);
+            caret-color: var(--primary);
+        }
+        
+        .cancel-btn { color: var(--primary); font-size: 16px; font-weight: 500; cursor: pointer; }
+
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 16px; margin-top: 24px;
+        }
+        .section-title { font-size: 15px; font-weight: 700; }
+        .action-icon { color: var(--text-sub); opacity: 0.6; }
+
+        .tags-flow { display: flex; flex-wrap: wrap; gap: 10px; }
+        .tag-chip {
+            padding: 8px 16px; background: #F7F8FA; border-radius: 8px;
+            font-size: 13px; color: var(--text-main);
+            transition: background 0.2s;
+        }
+        .tag-chip:active { background: #EAEAEA; }
+        
+        .tag-chip.hot { 
+            color: #FF2D55; background: rgba(255, 45, 85, 0.08); 
+            display: flex; align-items: center; gap: 4px;
+        }
+
+        /* 空状态 Illustration */
+        .empty-state {
+            margin-top: 80px;
+            display: flex; flex-direction: column; align-items: center;
+            color: var(--text-sub);
+        }
+        .cat-illustration {
+            width: 120px; height: 120px; margin-bottom: 24px;
+            color: #E5E5EA; /* 默认颜色 */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="search-header">
+        <div class="search-input-box">
+            <svg class="icon-sm" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            
+            <input type="text" placeholder="牛肉丸 / 住宿推荐" value="停车">
+            
+            <svg class="icon-sm" viewBox="0 0 24 24" style="cursor:pointer; opacity:0.6;">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </div>
+        <div class="cancel-btn">取消</div>
+    </div>
+
+    <div class="section-header">
+        <span class="section-title">历史搜索</span>
+        <svg class="icon-sm action-icon" viewBox="0 0 24 24" style="width:16px;height:16px;">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+    </div>
+    <div class="tags-flow">
+        <div class="tag-chip">南澳岛路况</div>
+        <div class="tag-chip">肠粉</div>
+    </div>
+
+    <div class="section-header">
+        <span class="section-title">🔥 极客热搜</span>
+    </div>
+    <div class="tags-flow">
+        <div class="tag-chip hot">
+            <svg class="icon-sm" viewBox="0 0 24 24" style="width:14px;height:14px; fill:currentColor; stroke:none;">
+                <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.1.2-2.1.5-3z"></path>
+            </svg>
+            酒店恶意加价
+        </div>
+        <div class="tag-chip hot">
+            <svg class="icon-sm" viewBox="0 0 24 24" style="width:14px;height:14px; fill:currentColor; stroke:none;">
+                <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.1.2-2.1.5-3z"></path>
+            </svg>
+            极客节接驳车
+        </div>
+        <div class="tag-chip">潮州古城停车</div>
+        <div class="tag-chip">牛肉火锅排队</div>
+    </div>
+
+    <div class="empty-state">
+        <svg class="cat-illustration" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M30 40 L20 20 L40 25 Q50 22 60 25 L80 20 L70 40 Q85 50 85 65 A 25 25 0 0 1 15 65 Q15 50 30 40" />
+            <circle cx="35" cy="55" r="4" fill="currentColor" stroke="none"/>
+            <circle cx="65" cy="55" r="4" fill="currentColor" stroke="none"/>
+            <path d="M47 62 L50 65 L53 62" stroke-width="2"/>
+            <circle cx="65" cy="75" r="15" stroke-dasharray="4 2"/>
+            <line x1="75" y1="85" x2="85" y2="95" />
+        </svg>
+        <p>没有找到相关内容喵...</p>
+        <p style="font-size:12px; margin-top:8px; opacity:0.6;">换个关键词试试？</p>
+    </div>
+
+</body>
+</html>
