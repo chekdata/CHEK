@@ -6,8 +6,13 @@ import { WikiCard } from '@/components/WikiCard';
 
 export const revalidate = 0;
 
-export default async function SearchPage({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) {
-  const qRaw = searchParams.query;
+export default async function SearchPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const sp = await searchParams;
+  const qRaw = sp.query;
   const query = Array.isArray(qRaw) ? qRaw[0] : qRaw || '';
   const q = query.trim();
 
@@ -111,4 +116,3 @@ export default async function SearchPage({ searchParams }: { searchParams: Recor
     </div>
   );
 }
-

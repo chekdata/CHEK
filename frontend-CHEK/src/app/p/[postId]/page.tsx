@@ -7,8 +7,13 @@ import { MarkdownBody } from '@/components/MarkdownBody';
 import { MediaGallery } from '@/components/MediaGallery';
 import { CommentsSection } from '@/components/CommentsSection';
 
-export async function generateMetadata({ params }: { params: { postId: string } }): Promise<Metadata> {
-  const id = Number(params.postId);
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ postId: string }>;
+}): Promise<Metadata> {
+  const { postId } = await params;
+  const id = Number(postId);
   if (!Number.isFinite(id) || id <= 0) return { title: '相辅 - CHEK' };
   const post = await serverGet<PostDTO>(`/api/chek-content/v1/posts/${id}`, { revalidateSeconds: 30 });
   if (!post) return { title: '相辅 - CHEK' };
@@ -19,8 +24,9 @@ export async function generateMetadata({ params }: { params: { postId: string } 
   };
 }
 
-export default async function PostDetailPage({ params }: { params: { postId: string } }) {
-  const id = Number(params.postId);
+export default async function PostDetailPage({ params }: { params: Promise<{ postId: string }> }) {
+  const { postId } = await params;
+  const id = Number(postId);
   if (!Number.isFinite(id) || id <= 0) notFound();
 
   const post = await serverGet<PostDTO>(`/api/chek-content/v1/posts/${id}`, { revalidateSeconds: 30 });
@@ -86,4 +92,3 @@ export default async function PostDetailPage({ params }: { params: { postId: str
     </div>
   );
 }
-

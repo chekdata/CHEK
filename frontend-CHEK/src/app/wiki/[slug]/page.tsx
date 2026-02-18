@@ -6,8 +6,13 @@ import type { PostDTO, WikiEntryDTO } from '@/lib/api-types';
 import { MarkdownBody } from '@/components/MarkdownBody';
 import { PostCard } from '@/components/PostCard';
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const slug = decodeURIComponent(params.slug || '');
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug: rawSlug } = await params;
+  const slug = decodeURIComponent(rawSlug || '');
   const entry = await serverGet<WikiEntryDTO>(`/api/chek-content/v1/wiki/entries/bySlug/${encodeURIComponent(slug)}`, {
     revalidateSeconds: 120,
   });
@@ -18,8 +23,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function WikiDetailPage({ params }: { params: { slug: string } }) {
-  const slug = decodeURIComponent(params.slug || '');
+export default async function WikiDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug: rawSlug } = await params;
+  const slug = decodeURIComponent(rawSlug || '');
 
   const entry = await serverGet<WikiEntryDTO>(
     `/api/chek-content/v1/wiki/entries/bySlug/${encodeURIComponent(slug)}`,
@@ -109,4 +115,3 @@ export default async function WikiDetailPage({ params }: { params: { slug: strin
     </div>
   );
 }
-

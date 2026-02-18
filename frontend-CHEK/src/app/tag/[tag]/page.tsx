@@ -6,8 +6,9 @@ import { PostCard } from '@/components/PostCard';
 
 export const revalidate = 120;
 
-export default async function TagPage({ params }: { params: { tag: string } }) {
-  const tag = decodeURIComponent(params.tag || '').trim();
+export default async function TagPage({ params }: { params: Promise<{ tag: string }> }) {
+  const { tag: rawTag } = await params;
+  const tag = decodeURIComponent(rawTag || '').trim();
   const safeTag = tag || '标签';
 
   const wiki =
@@ -71,4 +72,3 @@ export default async function TagPage({ params }: { params: { tag: string } }) {
     </div>
   );
 }
-
