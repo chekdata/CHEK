@@ -1,0 +1,73 @@
+import Link from 'next/link';
+import { serverGet } from '@/lib/server-api';
+import { WikiEntryDTO } from '@/lib/api-types';
+import { WikiCard } from '@/components/WikiCard';
+
+export const revalidate = 60;
+
+export default async function WikiIndexPage() {
+  const entries =
+    (await serverGet<WikiEntryDTO[]>('/api/chek-content/v1/wiki/entries?limit=20', {
+      revalidateSeconds: 60,
+    })) || [];
+
+  return (
+    <>
+      <header className="chek-header">
+        <div className="chek-title-row">
+          <h1 className="chek-title">有知</h1>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Link href="/timeline" className="chek-chip gray">
+              劳热
+            </Link>
+            <Link href="/map" className="chek-chip gray">
+              辣辣嗦
+            </Link>
+          </div>
+        </div>
+
+        <div className="chek-search">
+          <Link
+            href="/search"
+            className="chek-card"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '12px 14px',
+              borderRadius: 999,
+              border: '1px solid rgba(0,0,0,0.08)',
+              background: 'rgba(255,255,255,0.85)',
+              flex: 1,
+            }}
+          >
+            <span className="chek-muted">搜：路线 / 注意事项 / 交通 / 早餐…</span>
+          </Link>
+        </div>
+      </header>
+
+      <main className="chek-section" style={{ display: 'grid', gap: 12 }}>
+        {entries.length > 0 ? (
+          entries.map((e) => <WikiCard key={e.entryId} entry={e} />)
+        ) : (
+          <div className="chek-card" style={{ padding: 16 }}>
+            <div style={{ fontWeight: 900, marginBottom: 8 }}>还没有词条</div>
+            <div className="chek-muted" style={{ lineHeight: 1.7 }}>
+              欢迎你来潮汕。现在有知还在慢慢补齐，给你添麻烦了，先说声抱歉。
+              <br />
+              你可以先去相辅问问大家，或者先搜一下看看有没有相关内容。
+            </div>
+            <div style={{ marginTop: 12, display: 'flex', gap: 10 }}>
+              <Link href="/search" className="chek-chip gray">
+                去搜索
+              </Link>
+              <Link href="/post/new" className="chek-chip">
+                去发相辅
+              </Link>
+            </div>
+          </div>
+        )}
+      </main>
+    </>
+  );
+}
+

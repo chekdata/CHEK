@@ -1,5 +1,7 @@
 package com.chek.media.service;
 
+import com.chek.media.model.media.GetMediaResponse;
+import com.chek.media.model.media.MediaObjectDTO;
 import com.chek.media.model.upload.PresignUploadRequest;
 import com.chek.media.model.upload.PresignUploadResponse;
 import com.chek.media.repo.MediaRepository;
@@ -9,8 +11,11 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
@@ -83,6 +88,45 @@ public class UploadService {
     return resp;
   }
 
+  public GetMediaResponse getMedia(long mediaObjectId) {
+    MediaObjectDTO obj = mediaRepository.getById(mediaObjectId);
+    if (obj == null) return null;
+
+    GetMediaResponse resp = new GetMediaResponse();
+    resp.setMediaObjectId(obj.getMediaObjectId());
+    resp.setBucket(obj.getBucket());
+    resp.setObjectKey(obj.getObjectKey());
+    resp.setContentType(obj.getContentType());
+    resp.setSizeBytes(obj.getSizeBytes());
+
+    if (!"s3".equalsIgnoreCase(presignMode)) {
+      resp.setMock(true);
+      resp.setGetUrl("");
+      return resp;
+    }
+
+    if (obj.getBucket() == null || obj.getBucket().isBlank()) {
+      resp.setMock(true);
+      resp.setGetUrl("");
+      return resp;
+    }
+
+    S3Presigner presigner =
+        buildPresigner(region, endpoint == null || endpoint.isBlank() ? null : endpoint.trim());
+    GetObjectRequest getObjectRequest =
+        GetObjectRequest.builder().bucket(obj.getBucket()).key(obj.getObjectKey()).build();
+    GetObjectPresignRequest presignRequest =
+        GetObjectPresignRequest.builder()
+            .signatureDuration(Duration.ofMinutes(10))
+            .getObjectRequest(getObjectRequest)
+            .build();
+    PresignedGetObjectRequest presigned = presigner.presignGetObject(presignRequest);
+
+    resp.setMock(false);
+    resp.setGetUrl(String.valueOf(presigned.url()));
+    return resp;
+  }
+
   private static String normalizePrefix(String prefix) {
     if (prefix == null || prefix.isBlank()) return "";
     String p = prefix.trim();
@@ -96,4 +140,3 @@ public class UploadService {
     return b.build();
   }
 }
-

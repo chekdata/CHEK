@@ -1,22 +1,19 @@
-package com.chek.ai.model.price;
+package com.chek.ai.model.ai;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PriceQueryResponse {
+public class AiAskResponse {
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   private long sessionId;
   private boolean uncertain;
-  private String currency = "CNY";
-  private Double priceMin;
-  private Double priceMax;
-  private String unit;
+  private String answer;
   private List<Citation> citations = new ArrayList<>();
   private List<String> tips = new ArrayList<>();
-  private FallbackAction fallbackAction;
+  private Object ui;
 
   public long getSessionId() {
     return sessionId;
@@ -34,36 +31,12 @@ public class PriceQueryResponse {
     this.uncertain = uncertain;
   }
 
-  public String getCurrency() {
-    return currency;
+  public String getAnswer() {
+    return answer;
   }
 
-  public void setCurrency(String currency) {
-    this.currency = currency;
-  }
-
-  public Double getPriceMin() {
-    return priceMin;
-  }
-
-  public void setPriceMin(Double priceMin) {
-    this.priceMin = priceMin;
-  }
-
-  public Double getPriceMax() {
-    return priceMax;
-  }
-
-  public void setPriceMax(Double priceMax) {
-    this.priceMax = priceMax;
-  }
-
-  public String getUnit() {
-    return unit;
-  }
-
-  public void setUnit(String unit) {
-    this.unit = unit;
+  public void setAnswer(String answer) {
+    this.answer = answer;
   }
 
   public List<Citation> getCitations() {
@@ -82,12 +55,12 @@ public class PriceQueryResponse {
     this.tips = tips;
   }
 
-  public FallbackAction getFallbackAction() {
-    return fallbackAction;
+  public Object getUi() {
+    return ui;
   }
 
-  public void setFallbackAction(FallbackAction fallbackAction) {
-    this.fallbackAction = fallbackAction;
+  public void setUi(Object ui) {
+    this.ui = ui;
   }
 
   public String toJson() {
@@ -101,7 +74,7 @@ public class PriceQueryResponse {
   public static class Citation {
     private String sourceType;
     private String title;
-    private String snippet;
+    private String url;
     private String sourceId;
 
     public String getSourceType() {
@@ -120,12 +93,12 @@ public class PriceQueryResponse {
       this.title = title;
     }
 
-    public String getSnippet() {
-      return snippet;
+    public String getUrl() {
+      return url;
     }
 
-    public void setSnippet(String snippet) {
-      this.snippet = snippet;
+    public void setUrl(String url) {
+      this.url = url;
     }
 
     public String getSourceId() {
@@ -134,36 +107,6 @@ public class PriceQueryResponse {
 
     public void setSourceId(String sourceId) {
       this.sourceId = sourceId;
-    }
-  }
-
-  public static class FallbackAction {
-    private String type;
-    private String postType;
-    private String draftJson;
-
-    public String getType() {
-      return type;
-    }
-
-    public void setType(String type) {
-      this.type = type;
-    }
-
-    public String getPostType() {
-      return postType;
-    }
-
-    public void setPostType(String postType) {
-      this.postType = postType;
-    }
-
-    public String getDraftJson() {
-      return draftJson;
-    }
-
-    public void setDraftJson(String draftJson) {
-      this.draftJson = draftJson;
     }
   }
 }

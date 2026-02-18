@@ -3,7 +3,9 @@ package com.chek.content.repo;
 import com.chek.content.model.comment.CommentDTO;
 import com.chek.content.model.comment.CreateCommentRequest;
 import com.chek.content.model.post.CreatePostRequest;
+import com.chek.content.model.post.CreatePostMediaItem;
 import com.chek.content.model.post.PostDTO;
+import com.chek.content.model.post.PostMediaDTO;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
@@ -12,7 +14,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -27,7 +28,8 @@ public class PostRepository {
     this.jdbcTemplate = jdbcTemplate;
   }
 
-  public List<PostDTO> list(String query, List<String> tags, Long cursor, int limit) {
+  public List<PostDTO> list(
+      String query, List<String> tags, String authorUserOneId, Long cursor, int limit) {
     int n = Math.max(1, Math.min(limit, 100));
     long cur = cursor == null ? 0L : cursor;
     List<String> tagNames = normalizeTags(tags);
@@ -64,6 +66,11 @@ public class PostRepository {
       String q = "%" + query.trim() + "%";
       args.add(q);
       args.add(q);
+    }
+
+    if (authorUserOneId != null && !authorUserOneId.isBlank()) {
+      sql.append("AND p.author_user_one_id = ? ");
+      args.add(authorUserOneId.trim());
     }
 
     if (!tagNames.isEmpty()) {
@@ -103,6 +110,7 @@ public class PostRepository {
 
     for (PostDTO dto : list) {
       dto.setTags(listTagNamesByPostId(dto.getPostId()));
+      dto.setMedia(listMediaByPostId(dto.getPostId()));
     }
     return list;
   }
@@ -139,6 +147,7 @@ public class PostRepository {
     if (list.isEmpty()) return null;
     PostDTO dto = list.get(0);
     dto.setTags(listTagNamesByPostId(dto.getPostId()));
+    dto.setMedia(listMediaByPostId(dto.getPostId()));
     return dto;
   }
 
@@ -165,6 +174,7 @@ public class PostRepository {
     long id = keyHolder.getKey().longValue();
 
     upsertPostTags(id, req.getTags());
+    upsertPostMedia(id, req.getMedia());
     return get(id);
   }
 
@@ -302,6 +312,7 @@ public class PostRepository {
 
     for (PostDTO dto : list) {
       dto.setTags(listTagNamesByPostId(dto.getPostId()));
+      dto.setMedia(listMediaByPostId(dto.getPostId()));
     }
     return list;
   }
@@ -318,12 +329,45 @@ public class PostRepository {
     }
   }
 
+  private void upsertPostMedia(long postId, List<CreatePostMediaItem> media) {
+    if (media == null || media.isEmpty()) return;
+    for (CreatePostMediaItem item : media) {
+      if (item == null) continue;
+      Long mediaObjectId = item.getMediaObjectId();
+      if (mediaObjectId == null || mediaObjectId <= 0) continue;
+      String kind = item.getKind();
+      if (kind == null || kind.isBlank()) kind = "IMAGE";
+      try {
+        jdbcTemplate.update(
+            "INSERT INTO chek_content_post_media(post_id, media_object_id, kind) VALUES(?, ?, ?)",
+            postId,
+            mediaObjectId,
+            kind.trim().toUpperCase());
+      } catch (DataIntegrityViolationException ignored) {
+        // ignore duplicate
+      }
+    }
+  }
+
   private List<String> listTagNamesByPostId(long postId) {
     return jdbcTemplate.query(
         "SELECT t.name FROM chek_content_tag t "
             + "JOIN chek_content_post_tag pt ON t.id = pt.tag_id "
             + "WHERE pt.post_id = ? ORDER BY t.id ASC",
         (rs, rowNum) -> rs.getString("name"),
+        postId);
+  }
+
+  private List<PostMediaDTO> listMediaByPostId(long postId) {
+    return jdbcTemplate.query(
+        "SELECT media_object_id, kind FROM chek_content_post_media "
+            + "WHERE post_id = ? ORDER BY media_object_id ASC",
+        (rs, rowNum) -> {
+          PostMediaDTO dto = new PostMediaDTO();
+          dto.setMediaObjectId(rs.getLong("media_object_id"));
+          dto.setKind(rs.getString("kind"));
+          return dto;
+        },
         postId);
   }
 

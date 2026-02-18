@@ -5,8 +5,9 @@
 **/target
 **/dist
 **/node_modules
+**/.next
+**/out
 
 .env
 .env.*
 !.env.example
-

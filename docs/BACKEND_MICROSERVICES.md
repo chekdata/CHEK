@@ -121,16 +121,19 @@ Tags（可选）：
 
 ```ts
 type Post = {
-  postId: string
+  postId: number
   title?: string
   body: string
   tags: string[]
-  location?: { name?: string; lng?: number; lat?: number }
+  locationName?: string
+  lng?: number
+  lat?: number
   occurredAt?: string
-  media: Array<{ mediaObjectId: string; kind: 'IMAGE' | 'VIDEO' }>
-  author: { userOneId: string; nick?: string; avatarUrl?: string }
+  media: Array<{ mediaObjectId: number; kind: 'IMAGE' | 'VIDEO' }>
+  authorUserOneId: string
   isPublic: boolean
   isIndexable: boolean
+  commentCount: number
   createdAt: string
   updatedAt: string
 }
@@ -148,12 +151,12 @@ type Post = {
 
 ```ts
 type Comment = {
-  commentId: string
-  postId: string
+  commentId: number
+  postId: number
   body: string
-  author: { userOneId: string; nick?: string; avatarUrl?: string }
+  authorUserOneId: string
   createdAt: string
-  parentCommentId?: string
+  parentCommentId?: number
 }
 ```
 
@@ -161,7 +164,7 @@ type Comment = {
 
 ```ts
 type WikiEntry = {
-  entryId: string
+  entryId: number
   slug: string
   title: string
   summary?: string
@@ -195,6 +198,10 @@ MVP 可以先只做占位页；如果要做：
 - 无依据必须明确“不确定”，并引导去搜有知/发相辅
 - 可选返回 `ui`（A2UI tree）给前端渲染，但不替代 SEO 页直出 HTML
 
+API（建议，P1）：
+
+- `POST /v1/ai/ask`（输入 `query`，返回 `answer` + `citations`；可选 `ui`=A2UI tree）
+
 ## 6. 鉴权与权限（落地要点）
 
 - 前端只持有用户 token（`sid_at`），所有业务请求都走网关
@@ -205,4 +212,3 @@ MVP 可以先只做占位页；如果要做：
   - 写接口必须登录
   - 删除/下架：作者或管理员
   - Wiki 写入：MVP 可先只给管理员/白名单贡献者
-

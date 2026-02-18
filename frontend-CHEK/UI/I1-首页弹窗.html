@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=375, height=812, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>潮客 - 首页弹窗</title>
+    <style>
+        :root {
+            --primary: #3388FF;
+            --secondary: #46EBD5;
+            --accent: #D377CD;
+            --neutral-black: #1D1D1F;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+            background: #F2F4F8; /* 模拟首页背景 */
+            width: 375px; height: 812px;
+            overflow: hidden; position: relative;
+        }
+
+        /* --- 模拟首页背景 (为了展示弹窗效果) --- */
+        .home-bg-simulation {
+            filter: blur(10px); /* 模拟弹窗时背景变模糊 */
+            transform: scale(0.98);
+            transition: all 0.5s ease;
+            width: 100%; height: 100%; position: absolute;
+        }
+        .liquid-orb-bg { position: absolute; width: 300px; height: 300px; background: var(--primary); border-radius: 50%; top: -10%; left: -20%; opacity: 0.2; }
+        .dummy-nav { height: 88px; background: rgba(255,255,255,0.8); border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .dummy-card { height: 200px; background: #fff; border-radius: 24px; margin: 20px; opacity: 0.5; }
+
+        /* --- 弹窗容器 --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); /* 深色遮罩 */
+            backdrop-filter: blur(8px); /* 背景高斯模糊 */
+            z-index: 1000;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            opacity: 0; animation: fadeIn 0.4s forwards;
+        }
+
+        /* --- 玻璃信笺卡片 --- */
+        .modal-card {
+            width: 300px; padding: 40px 24px 32px;
+            border-radius: 36px;
+            background: rgba(255, 255, 255, 0.85); /* 高透亮白 */
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 
+                0 20px 50px -10px rgba(0, 0, 0, 0.3),
+                inset 0 0 40px rgba(255, 255, 255, 0.8);
+            position: relative; overflow: hidden;
+            text-align: center;
+            transform: scale(0.8); opacity: 0;
+            animation: popUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s forwards;
+        }
+
+        /* 卡片内的液态流动 */
+        .card-liquid {
+            position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle at 50% 50%, rgba(70, 235, 213, 0.15), rgba(51, 136, 255, 0.15), transparent 60%);
+            animation: rotate 10s linear infinite;
+            z-index: 0; pointer-events: none;
+        }
+
+        /* 内容层 */
+        .modal-content { position: relative; z-index: 2; }
+
+        /* 吉祥物 */
+        .mascot-img {
+            width: 120px; height: 120px; margin-bottom: 20px;
+            filter: drop-shadow(0 10px 20px rgba(51, 136, 255, 0.2));
+            /* 微微浮动 */
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* 文字排版 */
+        .modal-title {
+            font-size: 22px; font-weight: 800; color: var(--neutral-black);
+            margin-bottom: 12px; letter-spacing: 0.5px;
+        }
+        .modal-subtitle {
+            font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 32px;
+        }
+        .highlight { color: var(--primary); font-weight: 600; }
+
+        /* 主按钮 */
+        .btn-open {
+            display: block; width: 100%; height: 50px;
+            border-radius: 25px; border: none;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff; font-size: 16px; font-weight: 600;
+            box-shadow: 0 10px 20px rgba(51, 136, 255, 0.3);
+            cursor: pointer; position: relative; overflow: hidden;
+        }
+        /* 按钮流光 */
+        .btn-open::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shine 3s infinite;
+        }
+
+        /* 底部关闭按钮 */
+        .close-area {
+            margin-top: 30px;
+            width: 44px; height: 44px; border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.4);
+            background: rgba(255,255,255,0.2);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; cursor: pointer;
+            animation: fadeIn 0.5s ease 0.5s forwards; opacity: 0;
+        }
+
+        /* 动画定义 */
+        @keyframes fadeIn { to { opacity: 1; } }
+        @keyframes popUp { to { transform: scale(1); opacity: 1; } }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        @keyframes shine { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
+
+        /* SVG */
+        svg { width: 24px; height: 24px; }
+
+    </style>
+</head>
+<body>
+
+    <div class="home-bg-simulation">
+        <div class="liquid-orb-bg"></div>
+        <div class="dummy-nav"></div>
+        <div class="dummy-card"></div>
+        <div class="dummy-card" style="height:150px;"></div>
+    </div>
+
+    <div class="modal-overlay" id="modal">
+        
+        <div class="modal-card">
+            <div class="card-liquid"></div>
+
+            <div class="modal-content">
+                <img src="frontend-CHEK/assets/IP/空状态-通用.png" class="mascot-img" alt="Message">
+
+                <div class="modal-title">致远道而来的你</div>
+                
+                <div class="modal-subtitle">
+                    如果遇到了不愉快的事，<br>
+                    请允许我们先说一句：<br>
+                    <span class="highlight">对不起，给你添麻烦了。</span>
+                </div>
+
+                <button class="btn-open" onclick="window.location.href='H1_Letter.html'">
+                    打开看看
+                </button>
+            </div>
+        </div>
+
+        <div class="close-area" onclick="closeModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </div>
+
+    </div>
+
+    <script>
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            const bg = document.querySelector('.home-bg-simulation');
+            
+            // 退出动画逻辑
+            modal.style.opacity = '0';
+            modal.style.transition = 'opacity 0.3s ease';
+            
+            // 恢复背景
+            bg.style.filter = 'blur(0)';
+            bg.style.transform = 'scale(1)';
+            
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+    </script>
+
+</body>
+</html>

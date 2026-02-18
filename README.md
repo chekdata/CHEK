@@ -15,3 +15,21 @@
   - `/Users/jasonhong/Desktop/CHEK/docs/BACKEND_MICROSERVICES.md`
   - `/Users/jasonhong/Desktop/CHEK/docs/INTEGRATION_AUTH_GATEWAY.md`
   - `/Users/jasonhong/Desktop/CHEK/docs/DEVOPS_DELIVERY.md`
+
+## 快速开始（本地）
+
+后端（本地 H2 即可跑通）：
+
+```bash
+cd /Users/jasonhong/Desktop/CHEK/backend-CHEK-content && mvn spring-boot:run
+cd /Users/jasonhong/Desktop/CHEK/backend-CHEK-media && mvn spring-boot:run
+cd /Users/jasonhong/Desktop/CHEK/backend-CHEK-ai && mvn spring-boot:run
+```
+
+前端（Next.js）：
+
+```bash
+cd /Users/jasonhong/Desktop/CHEK/frontend-CHEK
+npm i
+npm run dev
+```

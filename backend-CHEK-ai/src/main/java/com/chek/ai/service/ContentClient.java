@@ -19,7 +19,7 @@ public class ContentClient {
     this.restClient = RestClient.builder().baseUrl(baseUrl).build();
   }
 
-  public List<PriceRefDTO> searchPriceRefs(String query, String location, String timeRange) {
+  public List<WikiEntryLite> searchWiki(String query, int limit) {
     try {
       ResponseData<?> resp =
           restClient
@@ -27,10 +27,9 @@ public class ContentClient {
               .uri(
                   uriBuilder ->
                       uriBuilder
-                          .path("/v1/priceRefs/search")
+                          .path("/v1/wiki/entries")
                           .queryParam("query", query)
-                          .queryParamIfPresent("location", location == null || location.isBlank() ? java.util.Optional.empty() : java.util.Optional.of(location))
-                          .queryParamIfPresent("timeRange", timeRange == null || timeRange.isBlank() ? java.util.Optional.empty() : java.util.Optional.of(timeRange))
+                          .queryParam("limit", limit)
                           .build())
               .accept(MediaType.APPLICATION_JSON)
               .retrieve()
@@ -38,22 +37,49 @@ public class ContentClient {
       if (resp == null || !resp.isSuccess() || resp.getData() == null) return Collections.emptyList();
       String json = MAPPER.writeValueAsString(resp.getData());
       return MAPPER.readValue(
-          json, MAPPER.getTypeFactory().constructCollectionType(List.class, PriceRefDTO.class));
+          json,
+          MAPPER.getTypeFactory().constructCollectionType(List.class, WikiEntryLite.class));
     } catch (Exception e) {
       return Collections.emptyList();
     }
   }
 
-  public static class PriceRefDTO {
-    public long id;
-    public String category;
-    public String subject;
-    public Double priceMin;
-    public Double priceMax;
-    public String unit;
-    public String currency;
-    public String sourceType;
-    public Long sourceId;
+  public List<PostLite> searchPosts(String query, int limit) {
+    try {
+      ResponseData<?> resp =
+          restClient
+              .get()
+              .uri(
+                  uriBuilder ->
+                      uriBuilder
+                          .path("/v1/posts")
+                          .queryParam("query", query)
+                          .queryParam("limit", limit)
+                          .build())
+              .accept(MediaType.APPLICATION_JSON)
+              .retrieve()
+              .body(ResponseData.class);
+      if (resp == null || !resp.isSuccess() || resp.getData() == null) return Collections.emptyList();
+      String json = MAPPER.writeValueAsString(resp.getData());
+      return MAPPER.readValue(
+          json,
+          MAPPER.getTypeFactory().constructCollectionType(List.class, PostLite.class));
+    } catch (Exception e) {
+      return Collections.emptyList();
+    }
+  }
+
+  public static class WikiEntryLite {
+    public long entryId;
+    public String slug;
+    public String title;
+    public String summary;
+  }
+
+  public static class PostLite {
+    public long postId;
+    public String title;
+    public String body;
   }
 }
 

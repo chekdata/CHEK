@@ -12,6 +12,7 @@ public class PostDTO {
   private Double lng;
   private Double lat;
   private Instant occurredAt;
+  private List<PostMediaDTO> media;
   private String authorUserOneId;
   private boolean isPublic;
   private boolean isIndexable;
@@ -81,6 +82,14 @@ public class PostDTO {
 
   public void setOccurredAt(Instant occurredAt) {
     this.occurredAt = occurredAt;
+  }
+
+  public List<PostMediaDTO> getMedia() {
+    return media;
+  }
+
+  public void setMedia(List<PostMediaDTO> media) {
+    this.media = media;
   }
 
   public String getAuthorUserOneId() {

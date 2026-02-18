@@ -31,9 +31,10 @@ public class PostController {
   public ResponseData<List<PostDTO>> listPosts(
       @RequestParam(name = "query", required = false) String query,
       @RequestParam(name = "tags", required = false) List<String> tags,
+      @RequestParam(name = "authorUserOneId", required = false) String authorUserOneId,
       @RequestParam(name = "cursor", required = false) Long cursor,
       @RequestParam(name = "limit", required = false, defaultValue = "20") int limit) {
-    return ResponseData.ok(postRepository.list(query, tags, cursor, limit));
+    return ResponseData.ok(postRepository.list(query, tags, authorUserOneId, cursor, limit));
   }
 
   @GetMapping("/posts/{id}")

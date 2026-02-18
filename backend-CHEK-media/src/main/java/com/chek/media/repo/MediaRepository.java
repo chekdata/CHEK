@@ -1,7 +1,10 @@
 package com.chek.media.repo;
 
+import com.chek.media.model.media.MediaObjectDTO;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.sql.Timestamp;
+import java.util.List;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -42,5 +45,29 @@ public class MediaRepository {
         keyHolder);
     return keyHolder.getKey().longValue();
   }
-}
 
+  public MediaObjectDTO getById(long mediaObjectId) {
+    List<MediaObjectDTO> list =
+        jdbcTemplate.query(
+            "SELECT id, bucket, object_key, content_type, size_bytes, uploader_user_one_id, status, created_at, updated_at "
+                + "FROM chek_media_object WHERE id = ?",
+            (rs, rowNum) -> {
+              MediaObjectDTO dto = new MediaObjectDTO();
+              dto.setMediaObjectId(rs.getLong("id"));
+              dto.setBucket(rs.getString("bucket"));
+              dto.setObjectKey(rs.getString("object_key"));
+              dto.setContentType(rs.getString("content_type"));
+              long sizeBytes = rs.getLong("size_bytes");
+              dto.setSizeBytes(rs.wasNull() ? null : sizeBytes);
+              dto.setUploaderUserOneId(rs.getString("uploader_user_one_id"));
+              dto.setStatus(rs.getString("status"));
+              Timestamp createdAt = rs.getTimestamp("created_at");
+              dto.setCreatedAt(createdAt == null ? null : createdAt.toInstant());
+              Timestamp updatedAt = rs.getTimestamp("updated_at");
+              dto.setUpdatedAt(updatedAt == null ? null : updatedAt.toInstant());
+              return dto;
+            },
+            mediaObjectId);
+    return list.isEmpty() ? null : list.get(0);
+  }
+}

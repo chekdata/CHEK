@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=375, height=812, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>致亲爱的朋友</title>
+    <style>
+        :root {
+            --primary: #3388FF;
+            --secondary: #46EBD5;
+            --accent: #D377CD;
+            --text-main: #1D1D1F;
+            --text-body: #444;
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --safe-top: 44px;
+            --safe-bottom: 34px;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Songti SC", serif; /* 使用宋体增加信笺感 */
+            background: #F2F4F8;
+            color: var(--text-main);
+            width: 375px; height: 812px;
+            overflow: hidden; position: relative;
+        }
+
+        /* 1. 液态背景 (慢速流动) */
+        .liquid-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: #F5F7FA;
+        }
+        .orb {
+            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.4;
+            animation: float 20s infinite ease-in-out;
+        }
+        .orb-1 { width: 400px; height: 400px; background: var(--secondary); top: -150px; left: -100px; opacity: 0.15; }
+        .orb-2 { width: 300px; height: 300px; background: var(--primary); bottom: -50px; right: -80px; opacity: 0.1; }
+        .orb-3 { width: 150px; height: 150px; background: var(--accent); top: 40%; left: 30%; opacity: 0.08; }
+
+        @keyframes float { 
+            0%, 100% { transform: translate(0, 0) scale(1); } 
+            50% { transform: translate(10px, 15px) scale(1.05); } 
+        }
+
+        /* 2. 导航栏 (极简) */
+        .nav-bar {
+            position: fixed; top: 0; width: 100%; z-index: 100;
+            padding: var(--safe-top) 16px 10px;
+            display: flex; align-items: center;
+            background: linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 100%);
+        }
+        .close-btn { 
+            width: 36px; height: 36px; border-radius: 50%; 
+            background: rgba(255,255,255,0.6); backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        /* 3. 信笺容器 */
+        .letter-scroll {
+            height: 100%; overflow-y: auto; overflow-x: hidden;
+            padding-top: 80px; padding-bottom: 120px; /* 留出底部按钮空间 */
+        }
+
+        .letter-card {
+            margin: 0 20px; padding: 32px 24px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 10px 40px -10px rgba(51, 136, 255, 0.1);
+            position: relative;
+        }
+
+        /* 吉祥物插画 */
+        .mascot-apology {
+            width: 100px; height: 100px; margin: 0 auto 24px; display: block;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.05));
+        }
+
+        /* 文本排版 */
+        h1 {
+            font-size: 22px; font-weight: 800; text-align: center; margin-bottom: 32px;
+            color: #1D1D1F; letter-spacing: 1px;
+        }
+        
+        p {
+            font-size: 15px; line-height: 1.8; color: var(--text-body); margin-bottom: 20px;
+            text-align: justify; font-family: -apple-system, sans-serif; /* 正文回归无衬线，易读 */
+        }
+
+        .highlight-text { font-weight: 700; color: #1D1D1F; }
+        
+        /* 承诺卡片 (Inner Cards) */
+        .promise-box {
+            background: rgba(255,255,255,0.5); border-radius: 16px;
+            padding: 20px; margin: 24px 0; border: 1px solid rgba(255,255,255,0.6);
+        }
+        .promise-title {
+            font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 8px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .promise-desc { font-size: 13px; color: #666; margin: 0; line-height: 1.6; }
+
+        /* 签名区 */
+        .signature {
+            margin-top: 40px; text-align: right;
+        }
+        .sign-name { font-size: 16px; font-weight: 700; color: #1D1D1F; margin-bottom: 4px; }
+        .sign-motto { font-size: 12px; color: #999; font-style: italic; letter-spacing: 1px; }
+
+        /* 4. 底部悬浮按钮 */
+        .bottom-float {
+            position: fixed; bottom: 34px; left: 0; right: 0;
+            display: flex; justify-content: center; z-index: 200;
+            pointer-events: none; /* 让背景点击穿透，按钮单独响应 */
+        }
+        .feedback-btn {
+            pointer-events: auto;
+            height: 52px; padding: 0 32px; border-radius: 26px;
+            background: linear-gradient(135deg, #1D1D1F 0%, #444 100%);
+            color: #fff; font-size: 15px; font-weight: 600; border: none;
+            display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            transition: transform 0.1s;
+        }
+        .feedback-btn:active { transform: scale(0.95); }
+
+        svg { width: 20px; height: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="liquid-bg">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <div class="nav-bar">
+        <div class="close-btn" onclick="history.back()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+    </div>
+
+    <div class="letter-scroll">
+        <div class="letter-card">
+            <svg class="mascot-apology" viewBox="0 0 100 100" fill="none">
+                <circle cx="50" cy="50" r="40" fill="#fff"/>
+                <path d="M30 65 Q50 75 70 65" stroke="#333" stroke-width="2" stroke-linecap="round"/> <circle cx="35" cy="45" r="4" fill="#333"/> <circle cx="65" cy="45" r="4" fill="#333"/>
+                <path d="M20 50 Q10 60 20 70" stroke="#333" stroke-width="2" fill="none"/> <path d="M80 50 Q90 60 80 70" stroke="#333" stroke-width="2" fill="none"/>
+            </svg>
+
+            <h1>亲爱的朋友：你好。</h1>
+
+            <p>如果你是带着期待来的，却遇到了不愉快的事，请允许我们先认真地说一句——<span class="highlight-text">对不起，给你添麻烦了。</span></p>
+
+            <p>最近我们看到很多分享：有人被抬价，有人被误导。旅行本该是轻松的，不该让人一路“提心吊胆”。</p>
+
+            <p>我们是「潮客 CHEK」的民间志愿者。不是商家，也不是管理者，只是一群想把事情慢慢做对的普通<span class="highlight-text">“胶己人”</span>。</p>
+
+            <p>能做的或许不多，但有几件事，我们愿意认真去做：</p>
+
+            <div class="promise-box">
+                <div class="promise-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    第一，把信息讲清楚
+                </div>
+                <p class="promise-desc">哪些地方容易踩雷，哪些价格区间更合理，我们会整理成公开可查的内容，让后来的人少走弯路。</p>
+            </div>
+
+            <div class="promise-box">
+                <div class="promise-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    第二，陪你面对不愉快
+                </div>
+                <p class="promise-desc">如果你遇到争议，我们会告诉你保留什么、记录什么、可以向哪里反映，至少让你不用一个人“心头着急”。</p>
+            </div>
+
+            <div class="promise-box">
+                <div class="promise-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    第三，守住人情味
+                </div>
+                <p class="promise-desc">这里本该是实在的、热情的。更多本地人是愿意认真待客的，只是他们不像网络声音那样响亮。</p>
+            </div>
+
+            <p>远路来潮汕，辛苦了。<br>多谢你来，多谢你讲实情。</p>
+            
+            <p>愿你在这里，仍能遇到温暖的人、踏实的味道、值得记住的片刻。</p>
+
+            <div class="signature">
+                <div class="sign-name">潮客 CHEK 民间志愿者团队</div>
+                <div class="sign-motto">（慢慢做事，毋好失礼）</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-float">
+        <button class="feedback-btn" onclick="alert('跳转反馈/发帖页')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            告诉我你遇到了什么
+        </button>
+    </div>
+
+</body>
+</html>

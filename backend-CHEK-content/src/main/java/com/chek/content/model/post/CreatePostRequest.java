@@ -1,5 +1,6 @@
 package com.chek.content.model.post;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
@@ -23,6 +24,8 @@ public class CreatePostRequest {
   private Double lat;
 
   private Instant occurredAt;
+
+  private List<@Valid CreatePostMediaItem> media;
 
   public String getTitle() {
     return title;
@@ -78,5 +81,13 @@ public class CreatePostRequest {
 
   public void setOccurredAt(Instant occurredAt) {
     this.occurredAt = occurredAt;
+  }
+
+  public List<CreatePostMediaItem> getMedia() {
+    return media;
+  }
+
+  public void setMedia(List<CreatePostMediaItem> media) {
+    this.media = media;
   }
 }
