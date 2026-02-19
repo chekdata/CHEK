@@ -8,6 +8,8 @@ import { MarkdownBody } from '@/components/MarkdownBody';
 import { MediaGallery } from '@/components/MediaGallery';
 import { CommentsSection } from '@/components/CommentsSection';
 import { formatUserOneIdForDisplay } from '@/lib/user-display';
+import { FollowButton } from '@/components/FollowButton';
+import { ShareIconButton } from '@/components/ShareIconButton';
 
 async function pickFirstImageUrlFromMedia(media: PostMediaDTO[] | null | undefined): Promise<string> {
   const list = Array.isArray(media) ? media : [];
@@ -167,8 +169,9 @@ export default async function PostDetailPage({ params }: { params: Promise<{ pos
 
           <div style={{ fontWeight: 900 }}>相辅</div>
 
-          <button
-            type="button"
+          <ShareIconButton
+            url={canonical}
+            title={title}
             className="chek-card"
             style={{
               width: 36,
@@ -178,17 +181,10 @@ export default async function PostDetailPage({ params }: { params: Promise<{ pos
               alignItems: 'center',
               justifyContent: 'center',
               border: '1px solid rgba(255,255,255,0.55)',
-              cursor: 'not-allowed',
+              cursor: 'pointer',
             }}
-            aria-label="更多（占位）"
-            disabled
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="1" />
-              <circle cx="19" cy="12" r="1" />
-              <circle cx="5" cy="12" r="1" />
-            </svg>
-          </button>
+            ariaLabel="分享"
+          />
         </div>
       </header>
 
@@ -204,14 +200,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ pos
                   {post.locationName ? ` · ${post.locationName}` : ''}
                 </div>
               </div>
-              <button
-                type="button"
-                className="chek-chip gray"
-                style={{ border: 'none', cursor: 'not-allowed', height: 32 }}
-                disabled
-              >
-                关注
-              </button>
+              <FollowButton targetUserOneId={post.authorUserOneId} nextPath={`/p/${post.postId}`} />
             </div>
 
             <h1 style={{ margin: 0, fontWeight: 900, fontSize: 20, lineHeight: 1.25 }}>{uiTitle}</h1>

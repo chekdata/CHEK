@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { WikiEntryDTO } from '@/lib/api-types';
+import { highlightText } from '@/lib/highlight';
 
-export function WikiCard({ entry }: { entry: WikiEntryDTO }) {
+export function WikiCard({ entry, highlightQuery }: { entry: WikiEntryDTO; highlightQuery?: string }) {
   return (
     <Link
       href={`/wiki/${encodeURIComponent(entry.slug)}`}
@@ -17,11 +18,13 @@ export function WikiCard({ entry }: { entry: WikiEntryDTO }) {
         </span>
       </div>
 
-      <div style={{ fontWeight: 900, fontSize: 16, lineHeight: 1.3 }}>{entry.title}</div>
+      <div style={{ fontWeight: 900, fontSize: 16, lineHeight: 1.3 }}>
+        {highlightText(entry.title, highlightQuery || '')}
+      </div>
 
       {entry.summary ? (
         <div className="chek-muted" style={{ marginTop: 8, fontSize: 13, lineHeight: 1.5 }}>
-          {entry.summary}
+          {highlightText(entry.summary, highlightQuery || '')}
         </div>
       ) : null}
 
@@ -37,4 +40,3 @@ export function WikiCard({ entry }: { entry: WikiEntryDTO }) {
     </Link>
   );
 }
-

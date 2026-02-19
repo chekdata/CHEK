@@ -4,7 +4,8 @@ import { serverGet } from '@/lib/server-api';
 import type { PostDTO, WikiEntryDTO } from '@/lib/api-types';
 import { absoluteUrl, makePageMetadata } from '@/lib/seo';
 import { WikiCard } from '@/components/WikiCard';
-import { PostCard } from '@/components/PostCard';
+import { TagFollowButton } from '@/app/tag/[tag]/TagFollowButton';
+import { TagPostsClient } from '@/app/tag/[tag]/TagPostsClient';
 
 export const revalidate = 120;
 
@@ -100,9 +101,7 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
           </Link>
         </div>
         <div style={{ marginTop: 12, display: 'flex', gap: 10 }}>
-          <button className="chek-chip gray" style={{ border: 'none' }} disabled>
-            关注（占位）
-          </button>
+          <TagFollowButton tag={safeTag} />
           <Link href={`/post/new?tag=${encodeURIComponent(safeTag)}`} className="chek-chip">
             + 来相辅
           </Link>
@@ -124,16 +123,7 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
         </section>
 
         <section className="chek-card" style={{ padding: 16 }}>
-          <div style={{ fontWeight: 900, marginBottom: 10 }}>相辅</div>
-          <div style={{ display: 'grid', gap: 10 }}>
-            {posts.length > 0 ? (
-              posts.map((p) => <PostCard key={p.postId} post={p} />)
-            ) : (
-              <div className="chek-muted" style={{ lineHeight: 1.7 }}>
-                这个标签下暂时还没有相辅。欢迎你先发一条，我们一起把信息补齐。
-              </div>
-            )}
-          </div>
+          <TagPostsClient tag={safeTag} initialPosts={posts} />
         </section>
       </main>
 

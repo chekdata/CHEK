@@ -4,10 +4,10 @@ import type { Metadata } from 'next';
 import { serverGet } from '@/lib/server-api';
 import { PostDTO } from '@/lib/api-types';
 import { makePageMetadata } from '@/lib/seo';
-import { PostCard } from '@/components/PostCard';
 import cat from '@assets/IP/空状态-通用.png';
 import emptyNoPosts from '@assets/IP/没有帖子.png';
 import { WelcomeModal } from '@/components/WelcomeModal';
+import { FeedClient } from '@/app/(tabs)/feed/FeedClient';
 
 export const revalidate = 30;
 export const metadata: Metadata = makePageMetadata({
@@ -185,7 +185,7 @@ export default async function FeedPage() {
         </Link>
 
         {posts.length > 0 ? (
-          posts.map((p) => <PostCard key={p.postId} post={p} />)
+          <FeedClient initialPosts={posts} />
         ) : (
           <div className="chek-card" style={{ padding: 18, borderRadius: 28, textAlign: 'center' }}>
             <Image src={emptyNoPosts} alt="" width={160} height={160} priority />

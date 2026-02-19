@@ -5,6 +5,7 @@ import type { PostDTO, WikiEntryDTO } from '@/lib/api-types';
 import { makePageMetadata } from '@/lib/seo';
 import { PostCard } from '@/components/PostCard';
 import { WikiCard } from '@/components/WikiCard';
+import { SearchAssist } from '@/app/search/SearchAssist';
 
 export const revalidate = 0;
 export const metadata: Metadata = makePageMetadata({
@@ -26,8 +27,12 @@ export default async function SearchPage({
   const query = Array.isArray(qRaw) ? qRaw[0] : qRaw || '';
   const q = query.trim();
 
+  const typeRaw = sp.type;
+  const typeStr = Array.isArray(typeRaw) ? typeRaw[0] : typeRaw || '';
+  const type = typeStr === 'wiki' || typeStr === 'posts' ? typeStr : 'all';
+
   const wiki =
-    q
+    q && type !== 'posts'
       ? (await serverGet<WikiEntryDTO[]>(
           `/api/chek-content/v1/wiki/entries?query=${encodeURIComponent(q)}&limit=10`,
           { revalidateSeconds: 0 }
@@ -35,7 +40,7 @@ export default async function SearchPage({
       : [];
 
   const posts =
-    q
+    q && type !== 'wiki'
       ? (await serverGet<PostDTO[]>(
           `/api/chek-content/v1/posts?query=${encodeURIComponent(q)}&limit=10`,
           { revalidateSeconds: 0 }
@@ -53,6 +58,7 @@ export default async function SearchPage({
         </div>
 
         <form action="/search" method="GET" style={{ marginTop: 12, display: 'flex', gap: 10 }}>
+          {type !== 'all' ? <input type="hidden" name="type" value={type} /> : null}
           <input
             name="query"
             defaultValue={q}
@@ -70,6 +76,8 @@ export default async function SearchPage({
             搜
           </button>
         </form>
+
+        <SearchAssist query={q} type={type} />
       </header>
 
       <main className="chek-section" style={{ display: 'grid', gap: 12 }}>
@@ -90,36 +98,40 @@ export default async function SearchPage({
           </div>
         ) : (
           <>
-            <section className="chek-card" style={{ padding: 16 }}>
-              <div style={{ fontWeight: 900, marginBottom: 10 }}>有知</div>
-              <div style={{ display: 'grid', gap: 10 }}>
-                {wiki.length > 0 ? (
-                  wiki.map((e) => <WikiCard key={e.entryId} entry={e} />)
-                ) : (
-                  <div className="chek-muted" style={{ lineHeight: 1.7 }}>
-                    暂时没搜到有知结果，给你添麻烦了，先抱歉。
-                  </div>
-                )}
-              </div>
-            </section>
-
-            <section className="chek-card" style={{ padding: 16 }}>
-              <div style={{ fontWeight: 900, marginBottom: 10 }}>相辅</div>
-              <div style={{ display: 'grid', gap: 10 }}>
-                {posts.length > 0 ? (
-                  posts.map((p) => <PostCard key={p.postId} post={p} />)
-                ) : (
-                  <div className="chek-muted" style={{ lineHeight: 1.7 }}>
-                    暂时没搜到相辅结果。要不你来发一条，我们一起把路走顺。
-                    <div style={{ marginTop: 10 }}>
-                      <Link href={`/post/new`} className="chek-chip">
-                        + 来相辅
-                      </Link>
+            {type !== 'posts' ? (
+              <section className="chek-card" style={{ padding: 16 }}>
+                <div style={{ fontWeight: 900, marginBottom: 10 }}>有知</div>
+                <div style={{ display: 'grid', gap: 10 }}>
+                  {wiki.length > 0 ? (
+                    wiki.map((e) => <WikiCard key={e.entryId} entry={e} highlightQuery={q} />)
+                  ) : (
+                    <div className="chek-muted" style={{ lineHeight: 1.7 }}>
+                      暂时没搜到有知结果，给你添麻烦了，先抱歉。
                     </div>
-                  </div>
-                )}
-              </div>
-            </section>
+                  )}
+                </div>
+              </section>
+            ) : null}
+
+            {type !== 'wiki' ? (
+              <section className="chek-card" style={{ padding: 16 }}>
+                <div style={{ fontWeight: 900, marginBottom: 10 }}>相辅</div>
+                <div style={{ display: 'grid', gap: 10 }}>
+                  {posts.length > 0 ? (
+                    posts.map((p) => <PostCard key={p.postId} post={p} highlightQuery={q} />)
+                  ) : (
+                    <div className="chek-muted" style={{ lineHeight: 1.7 }}>
+                      暂时没搜到相辅结果。要不你来发一条，我们一起把路走顺。
+                      <div style={{ marginTop: 10 }}>
+                        <Link href={`/post/new`} className="chek-chip">
+                          + 来相辅
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </section>
+            ) : null}
           </>
         )}
       </main>

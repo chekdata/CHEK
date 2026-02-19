@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import type { CommentDTO } from '@/lib/api-types';
+import type { CommentDTO, PostDTO } from '@/lib/api-types';
 import { clientFetch } from '@/lib/client-api';
 import { getToken } from '@/lib/token';
+import { absoluteUrl, shareLink } from '@/lib/share';
 import { resolveAuthorDisplayName } from '@/lib/user-display';
 import { SkeletonBlock, SkeletonLines } from '@/components/Skeleton';
 
@@ -16,14 +18,25 @@ function formatTime(ts?: string): string {
 }
 
 export function CommentsSection({ postId }: { postId: number }) {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [list, setList] = useState<CommentDTO[]>([]);
   const [body, setBody] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [social, setSocial] = useState<{
+    likeCount: number;
+    favoriteCount: number;
+    likedByMe: boolean;
+    favoritedByMe: boolean;
+  } | null>(null);
+  const [likePending, setLikePending] = useState(false);
+  const [favoritePending, setFavoritePending] = useState(false);
+  const [shareHint, setShareHint] = useState('');
 
   async function refresh() {
     setLoading(true);
+    setMsg(null);
     try {
       const data = await clientFetch<CommentDTO[]>(
         `/api/chek-content/v1/posts/${postId}/comments?limit=50`,
@@ -37,8 +50,26 @@ export function CommentsSection({ postId }: { postId: number }) {
     }
   }
 
+  async function refreshSocial() {
+    try {
+      const post = await clientFetch<PostDTO>(`/api/chek-content/v1/posts/${postId}`, {
+        method: 'GET',
+        auth: true,
+      });
+      setSocial({
+        likeCount: Number(post?.likeCount || 0),
+        favoriteCount: Number(post?.favoriteCount || 0),
+        likedByMe: post?.likedByMe === true,
+        favoritedByMe: post?.favoritedByMe === true,
+      });
+    } catch {
+      // keep whatever we had
+    }
+  }
+
   useEffect(() => {
     refresh();
+    refreshSocial();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId]);
 
@@ -64,6 +95,85 @@ export function CommentsSection({ postId }: { postId: number }) {
       setMsg(e?.message || '评论失败了，给你添麻烦了，先抱歉。');
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  function gotoLogin() {
+    router.push(`/auth/login?next=${encodeURIComponent(`/p/${postId}`)}`);
+  }
+
+  async function toggleLike() {
+    if (likePending) return;
+    if (!getToken()) return gotoLogin();
+    const curLiked = social?.likedByMe === true;
+    const nextLiked = !curLiked;
+
+    setSocial((s) => ({
+      likeCount: Math.max(0, Number(s?.likeCount || 0) + (nextLiked ? 1 : -1)),
+      favoriteCount: Number(s?.favoriteCount || 0),
+      likedByMe: nextLiked,
+      favoritedByMe: s?.favoritedByMe === true,
+    }));
+
+    setLikePending(true);
+    try {
+      const updated = await clientFetch<PostDTO>(`/api/chek-content/v1/posts/${postId}/likes`, {
+        method: nextLiked ? 'POST' : 'DELETE',
+        auth: true,
+      });
+      setSocial({
+        likeCount: Number(updated?.likeCount || 0),
+        favoriteCount: Number(updated?.favoriteCount || 0),
+        likedByMe: updated?.likedByMe === true,
+        favoritedByMe: updated?.favoritedByMe === true,
+      });
+    } catch (e: any) {
+      setMsg(e?.message || '操作失败了，真诚抱歉。');
+      await refreshSocial();
+    } finally {
+      setLikePending(false);
+    }
+  }
+
+  async function toggleFavorite() {
+    if (favoritePending) return;
+    if (!getToken()) return gotoLogin();
+    const curFav = social?.favoritedByMe === true;
+    const nextFav = !curFav;
+
+    setSocial((s) => ({
+      likeCount: Number(s?.likeCount || 0),
+      favoriteCount: Math.max(0, Number(s?.favoriteCount || 0) + (nextFav ? 1 : -1)),
+      likedByMe: s?.likedByMe === true,
+      favoritedByMe: nextFav,
+    }));
+
+    setFavoritePending(true);
+    try {
+      const updated = await clientFetch<PostDTO>(`/api/chek-content/v1/posts/${postId}/favorites`, {
+        method: nextFav ? 'POST' : 'DELETE',
+        auth: true,
+      });
+      setSocial({
+        likeCount: Number(updated?.likeCount || 0),
+        favoriteCount: Number(updated?.favoriteCount || 0),
+        likedByMe: updated?.likedByMe === true,
+        favoritedByMe: updated?.favoritedByMe === true,
+      });
+    } catch (e: any) {
+      setMsg(e?.message || '操作失败了，真诚抱歉。');
+      await refreshSocial();
+    } finally {
+      setFavoritePending(false);
+    }
+  }
+
+  async function onShare() {
+    const url = absoluteUrl(`/p/${postId}`);
+    const method = await shareLink({ url, title: '相辅' });
+    if (method === 'copied') {
+      setShareHint('已复制');
+      window.setTimeout(() => setShareHint(''), 1200);
     }
   }
 
@@ -109,14 +219,6 @@ export function CommentsSection({ postId }: { postId: number }) {
                   </div>
                   <div style={{ marginTop: 6, lineHeight: 1.7, fontSize: 14, whiteSpace: 'pre-wrap' }}>{c.body}</div>
                 </div>
-                <button
-                  className="chek-chip gray"
-                  style={{ border: 'none', cursor: 'not-allowed', height: 30 }}
-                  type="button"
-                  disabled
-                >
-                  回复
-                </button>
               </div>
             </div>
           ))
@@ -190,22 +292,34 @@ export function CommentsSection({ postId }: { postId: number }) {
 
           <button
             type="button"
-            className="chek-chip gray"
-            style={{ border: 'none', cursor: 'not-allowed', height: 40, minWidth: 56, justifyContent: 'center' }}
-            disabled
-            aria-label="收藏（占位）"
+            className={social?.likedByMe ? 'chek-chip' : 'chek-chip gray'}
+            style={{ border: 'none', cursor: 'pointer', height: 40, minWidth: 72, justifyContent: 'center' }}
+            aria-label="点赞"
+            onClick={toggleLike}
+            disabled={likePending}
           >
-            ☆
+            ♥ {social?.likeCount ? social.likeCount : '赞'}
+          </button>
+
+          <button
+            type="button"
+            className={social?.favoritedByMe ? 'chek-chip' : 'chek-chip gray'}
+            style={{ border: 'none', cursor: 'pointer', height: 40, minWidth: 72, justifyContent: 'center' }}
+            aria-label="收藏"
+            onClick={toggleFavorite}
+            disabled={favoritePending}
+          >
+            ☆ {social?.favoriteCount ? social.favoriteCount : '藏'}
           </button>
 
           <button
             type="button"
             className="chek-chip gray"
-            style={{ border: 'none', cursor: 'not-allowed', height: 40, minWidth: 56, justifyContent: 'center' }}
-            disabled
-            aria-label="分享（占位）"
+            style={{ border: 'none', cursor: 'pointer', height: 40, minWidth: 56, justifyContent: 'center' }}
+            aria-label="分享"
+            onClick={onShare}
           >
-            ↗
+            {shareHint || '↗'}
           </button>
         </div>
       </div>
