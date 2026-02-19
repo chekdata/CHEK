@@ -29,3 +29,15 @@ bash /Users/jasonhong/Desktop/CHEK/scripts/dev-up.sh
 ```bash
 bash /Users/jasonhong/Desktop/CHEK/scripts/dev-down.sh
 ```
+
+## 协作模式（Collaborative Workflow）
+
+默认走 `dev -> staging -> main`，推荐如下流程：
+
+1. 从 `dev`（或团队约定的 `develop`）切出 `feature/*` 分支。
+2. 功能改动必须配套测试（单元测试 + 集成测试），并说明覆盖率结果。
+3. 通过 Linter 与构建检查后再提交。
+4. Commit message 遵循 Conventional Commits（如 `feat: ...` / `fix: ...`）。
+5. 推送分支并发起 PR，PR 描述写清楚“做了什么 + 为什么这么做 + 如何验证”。
+6. 完成所有 review thread，等待 CI 全绿后再合并。
+7. 建议使用 squash merge 保持历史清晰。
