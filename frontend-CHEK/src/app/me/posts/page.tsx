@@ -5,8 +5,10 @@ import { useEffect, useState } from 'react';
 import { clientFetch } from '@/lib/client-api';
 import type { PostDTO } from '@/lib/api-types';
 import { getToken } from '@/lib/token';
+import { saveCurrentUserProfile } from '@/lib/user-display';
+import { SkeletonBlock, SkeletonLines } from '@/components/Skeleton';
 
-type UserInfo = { userOneId?: string; nickName?: string };
+type UserInfo = { userOneId?: string; nickName?: string; userName?: string; avatarUrl?: string };
 
 export default function MyPostsPage() {
   const [loading, setLoading] = useState(true);
@@ -24,6 +26,7 @@ export default function MyPostsPage() {
     setMsg(null);
     try {
       const user = await clientFetch<UserInfo>('/api/auth/v1/userInfo', { method: 'GET', auth: true });
+      saveCurrentUserProfile(user);
       const userOneId = String(user?.userOneId || '').trim();
       if (!userOneId) throw new Error('用户信息缺少 userOneId');
       const list = await clientFetch<PostDTO[]>(
@@ -64,7 +67,18 @@ export default function MyPostsPage() {
           </Link>
         </div>
 
-        {loading ? <div className="chek-muted">加载中…</div> : null}
+        {loading ? (
+          <div style={{ display: 'grid', gap: 10 }}>
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={`my-post-loading-${index}`} className="chek-card" style={{ padding: 16 }}>
+                <SkeletonBlock width="58%" height={18} radius={10} />
+                <div style={{ marginTop: 10 }}>
+                  <SkeletonLines lines={2} widths={['76%', '48%']} />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
 
         {msg ? (
           <div className="chek-card" style={{ padding: 16 }}>
@@ -112,4 +126,3 @@ export default function MyPostsPage() {
     </div>
   );
 }
-

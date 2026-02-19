@@ -29,10 +29,17 @@ public class PostRepository {
   }
 
   public List<PostDTO> list(
-      String query, List<String> tags, String authorUserOneId, Long cursor, int limit) {
+      String query,
+      List<String> tags,
+      String authorUserOneId,
+      String viewerUserOneId,
+      Long cursor,
+      int limit) {
     int n = Math.max(1, Math.min(limit, 100));
     long cur = cursor == null ? 0L : cursor;
     List<String> tagNames = normalizeTags(tags);
+    String viewer = viewerUserOneId == null ? "" : viewerUserOneId.trim();
+    boolean hasViewer = !viewer.isBlank();
 
     StringBuilder sql = new StringBuilder();
     List<Object> args = new ArrayList<>();
@@ -44,8 +51,21 @@ public class PostRepository {
     sql.append(
         "p.id, p.title, p.body_md, p.location_name, p.lng, p.lat, p.occurred_at, "
             + "p.author_user_one_id, p.is_public, p.is_indexable, p.created_at, p.updated_at, "
-            + "(SELECT COUNT(1) FROM chek_content_comment c WHERE c.post_id = p.id) AS comment_count "
-            + "FROM chek_content_post p ");
+            + "(SELECT COUNT(1) FROM chek_content_comment c WHERE c.post_id = p.id) AS comment_count, "
+            + "(SELECT COUNT(1) FROM chek_content_post_like l WHERE l.post_id = p.id) AS like_count, "
+            + "(SELECT COUNT(1) FROM chek_content_post_favorite f WHERE f.post_id = p.id) AS favorite_count, ");
+
+    if (hasViewer) {
+      sql.append(
+          "EXISTS(SELECT 1 FROM chek_content_post_like l2 WHERE l2.post_id = p.id AND l2.user_one_id = ?) AS liked_by_me, "
+              + "EXISTS(SELECT 1 FROM chek_content_post_favorite f2 WHERE f2.post_id = p.id AND f2.user_one_id = ?) AS favorited_by_me ");
+      args.add(viewer);
+      args.add(viewer);
+    } else {
+      sql.append("FALSE AS liked_by_me, FALSE AS favorited_by_me ");
+    }
+
+    sql.append("FROM chek_content_post p ");
 
     if (!tagNames.isEmpty()) {
       sql.append(
@@ -100,6 +120,10 @@ public class PostRepository {
               dto.setPublic(rs.getBoolean("is_public"));
               dto.setIndexable(rs.getBoolean("is_indexable"));
               dto.setCommentCount(rs.getLong("comment_count"));
+              dto.setLikeCount(rs.getLong("like_count"));
+              dto.setFavoriteCount(rs.getLong("favorite_count"));
+              dto.setLikedByMe(rs.getBoolean("liked_by_me"));
+              dto.setFavoritedByMe(rs.getBoolean("favorited_by_me"));
               Timestamp createdAt = rs.getTimestamp("created_at");
               dto.setCreatedAt(createdAt == null ? null : createdAt.toInstant());
               Timestamp updatedAt = rs.getTimestamp("updated_at");
@@ -116,11 +140,31 @@ public class PostRepository {
   }
 
   public PostDTO get(long postId) {
+    return get(postId, null);
+  }
+
+  public PostDTO get(long postId, String viewerUserOneId) {
+    String viewer = viewerUserOneId == null ? "" : viewerUserOneId.trim();
+    boolean hasViewer = !viewer.isBlank();
+    List<Object> args = new ArrayList<>();
+
+    if (hasViewer) {
+      args.add(viewer);
+      args.add(viewer);
+    }
+    args.add(postId);
+
     List<PostDTO> list =
         jdbcTemplate.query(
             "SELECT p.id, p.title, p.body_md, p.location_name, p.lng, p.lat, p.occurred_at, "
                 + "p.author_user_one_id, p.is_public, p.is_indexable, p.created_at, p.updated_at, "
-                + "(SELECT COUNT(1) FROM chek_content_comment c WHERE c.post_id = p.id) AS comment_count "
+                + "(SELECT COUNT(1) FROM chek_content_comment c WHERE c.post_id = p.id) AS comment_count, "
+                + "(SELECT COUNT(1) FROM chek_content_post_like l WHERE l.post_id = p.id) AS like_count, "
+                + "(SELECT COUNT(1) FROM chek_content_post_favorite f WHERE f.post_id = p.id) AS favorite_count, "
+                + (hasViewer
+                    ? "EXISTS(SELECT 1 FROM chek_content_post_like l2 WHERE l2.post_id = p.id AND l2.user_one_id = ?) AS liked_by_me, "
+                        + "EXISTS(SELECT 1 FROM chek_content_post_favorite f2 WHERE f2.post_id = p.id AND f2.user_one_id = ?) AS favorited_by_me "
+                    : "FALSE AS liked_by_me, FALSE AS favorited_by_me ")
                 + "FROM chek_content_post p WHERE p.id = ?",
             (rs, rowNum) -> {
               PostDTO dto = new PostDTO();
@@ -136,13 +180,17 @@ public class PostRepository {
               dto.setPublic(rs.getBoolean("is_public"));
               dto.setIndexable(rs.getBoolean("is_indexable"));
               dto.setCommentCount(rs.getLong("comment_count"));
+              dto.setLikeCount(rs.getLong("like_count"));
+              dto.setFavoriteCount(rs.getLong("favorite_count"));
+              dto.setLikedByMe(rs.getBoolean("liked_by_me"));
+              dto.setFavoritedByMe(rs.getBoolean("favorited_by_me"));
               Timestamp createdAt = rs.getTimestamp("created_at");
               dto.setCreatedAt(createdAt == null ? null : createdAt.toInstant());
               Timestamp updatedAt = rs.getTimestamp("updated_at");
               dto.setUpdatedAt(updatedAt == null ? null : updatedAt.toInstant());
               return dto;
             },
-            postId);
+            args.toArray());
 
     if (list.isEmpty()) return null;
     PostDTO dto = list.get(0);
@@ -270,7 +318,9 @@ public class PostRepository {
         new StringBuilder(
             "SELECT p.id, p.title, p.body_md, p.location_name, p.lng, p.lat, p.occurred_at, "
                 + "p.author_user_one_id, p.is_public, p.is_indexable, p.created_at, p.updated_at, "
-                + "(SELECT COUNT(1) FROM chek_content_comment c WHERE c.post_id = p.id) AS comment_count "
+                + "(SELECT COUNT(1) FROM chek_content_comment c WHERE c.post_id = p.id) AS comment_count, "
+                + "(SELECT COUNT(1) FROM chek_content_post_like l WHERE l.post_id = p.id) AS like_count, "
+                + "(SELECT COUNT(1) FROM chek_content_post_favorite f WHERE f.post_id = p.id) AS favorite_count "
                 + "FROM chek_content_post p WHERE p.is_public = TRUE AND p.is_indexable = TRUE ");
 
     if (updatedAfter != null) {
@@ -302,6 +352,78 @@ public class PostRepository {
               dto.setPublic(rs.getBoolean("is_public"));
               dto.setIndexable(rs.getBoolean("is_indexable"));
               dto.setCommentCount(rs.getLong("comment_count"));
+              dto.setLikeCount(rs.getLong("like_count"));
+              dto.setFavoriteCount(rs.getLong("favorite_count"));
+              dto.setLikedByMe(false);
+              dto.setFavoritedByMe(false);
+              Timestamp createdAt = rs.getTimestamp("created_at");
+              dto.setCreatedAt(createdAt == null ? null : createdAt.toInstant());
+              Timestamp updatedAt = rs.getTimestamp("updated_at");
+              dto.setUpdatedAt(updatedAt == null ? null : updatedAt.toInstant());
+              return dto;
+            },
+            args.toArray());
+
+    for (PostDTO dto : list) {
+      dto.setTags(listTagNamesByPostId(dto.getPostId()));
+      dto.setMedia(listMediaByPostId(dto.getPostId()));
+    }
+    return list;
+  }
+
+  public List<PostDTO> listFavorites(String userOneId, Long cursor, int limit) {
+    String viewer = userOneId == null ? "" : userOneId.trim();
+    if (viewer.isBlank()) return Collections.emptyList();
+
+    int n = Math.max(1, Math.min(limit, 100));
+    long cur = cursor == null ? 0L : cursor;
+    List<Object> args = new ArrayList<>();
+
+    StringBuilder sql =
+        new StringBuilder(
+            "SELECT p.id, p.title, p.body_md, p.location_name, p.lng, p.lat, p.occurred_at, "
+                + "p.author_user_one_id, p.is_public, p.is_indexable, p.created_at, p.updated_at, "
+                + "(SELECT COUNT(1) FROM chek_content_comment c WHERE c.post_id = p.id) AS comment_count, "
+                + "(SELECT COUNT(1) FROM chek_content_post_like l WHERE l.post_id = p.id) AS like_count, "
+                + "(SELECT COUNT(1) FROM chek_content_post_favorite f WHERE f.post_id = p.id) AS favorite_count, "
+                + "EXISTS(SELECT 1 FROM chek_content_post_like l2 WHERE l2.post_id = p.id AND l2.user_one_id = ?) AS liked_by_me, "
+                + "TRUE AS favorited_by_me "
+                + "FROM chek_content_post_favorite fav "
+                + "JOIN chek_content_post p ON p.id = fav.post_id "
+                + "WHERE fav.user_one_id = ? AND p.is_public = TRUE AND p.is_indexable = TRUE ");
+
+    args.add(viewer);
+    args.add(viewer);
+
+    if (cur > 0) {
+      sql.append("AND p.id < ? ");
+      args.add(cur);
+    }
+
+    sql.append("ORDER BY p.id DESC LIMIT ? ");
+    args.add(n);
+
+    List<PostDTO> list =
+        jdbcTemplate.query(
+            sql.toString(),
+            (rs, rowNum) -> {
+              PostDTO dto = new PostDTO();
+              dto.setPostId(rs.getLong("id"));
+              dto.setTitle(rs.getString("title"));
+              dto.setBody(rs.getString("body_md"));
+              dto.setLocationName(rs.getString("location_name"));
+              dto.setLng(toNullableDouble(rs.getBigDecimal("lng")));
+              dto.setLat(toNullableDouble(rs.getBigDecimal("lat")));
+              Timestamp occurredAt = rs.getTimestamp("occurred_at");
+              dto.setOccurredAt(occurredAt == null ? null : occurredAt.toInstant());
+              dto.setAuthorUserOneId(rs.getString("author_user_one_id"));
+              dto.setPublic(rs.getBoolean("is_public"));
+              dto.setIndexable(rs.getBoolean("is_indexable"));
+              dto.setCommentCount(rs.getLong("comment_count"));
+              dto.setLikeCount(rs.getLong("like_count"));
+              dto.setFavoriteCount(rs.getLong("favorite_count"));
+              dto.setLikedByMe(rs.getBoolean("liked_by_me"));
+              dto.setFavoritedByMe(rs.getBoolean("favorited_by_me"));
               Timestamp createdAt = rs.getTimestamp("created_at");
               dto.setCreatedAt(createdAt == null ? null : createdAt.toInstant());
               Timestamp updatedAt = rs.getTimestamp("updated_at");

@@ -3,7 +3,14 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { serverGet } from '@/lib/server-api';
 import type { PostDTO, WikiEntryDTO } from '@/lib/api-types';
-import { absoluteUrl, makeDescription, makePageMetadata } from '@/lib/seo';
+import {
+  absoluteUrl,
+  extractFirstImageUrlFromMarkdown,
+  isBadShareImageUrl,
+  makeDescription,
+  makePageMetadata,
+  normalizeMetaUrl,
+} from '@/lib/seo';
 import { MarkdownBody } from '@/components/MarkdownBody';
 import { PostCard } from '@/components/PostCard';
 
@@ -29,6 +36,12 @@ export async function generateMetadata({
 
   const noindex = !entry.isPublic || !entry.isIndexable;
   const description = makeDescription(entry.summary || entry.body || '', 160);
+  const rawImg = extractFirstImageUrlFromMarkdown(entry.body || '');
+  const shareImageUrl = (() => {
+    const u = normalizeMetaUrl(rawImg);
+    if (!u || isBadShareImageUrl(u)) return '';
+    return u;
+  })();
 
   return makePageMetadata({
     title: `${entry.title} - 有知 | CHEK`,
@@ -39,6 +52,9 @@ export async function generateMetadata({
     keywords: entry.tags || undefined,
     publishedTime: entry.publishedAt || entry.createdAt,
     modifiedTime: entry.updatedAt || entry.publishedAt || entry.createdAt,
+    imageUrl: shareImageUrl || undefined,
+    imageAlt: entry.title,
+    shareTitle: `${entry.title} | 有知 · 潮客 CHEK`,
   });
 }
 
@@ -60,6 +76,12 @@ export default async function WikiDetailPage({ params }: { params: Promise<{ slu
 
   const canonical = absoluteUrl(`/wiki/${encodeURIComponent(entry.slug)}`);
   const description = makeDescription(entry.summary || entry.body || '', 160);
+  const rawImg = extractFirstImageUrlFromMarkdown(entry.body || '');
+  const shareImageUrl = (() => {
+    const u = normalizeMetaUrl(rawImg);
+    if (!u || isBadShareImageUrl(u)) return '';
+    return u;
+  })();
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -67,8 +89,10 @@ export default async function WikiDetailPage({ params }: { params: Promise<{ slu
       {
         '@type': 'Article',
         mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
+        url: canonical,
         headline: entry.title,
         description,
+        image: shareImageUrl || undefined,
         datePublished: entry.publishedAt || entry.createdAt || undefined,
         dateModified: entry.updatedAt || entry.publishedAt || entry.createdAt || undefined,
         author: { '@type': 'Organization', name: 'CHEK' },
@@ -91,9 +115,14 @@ export default async function WikiDetailPage({ params }: { params: Promise<{ slu
       <header className="chek-header">
         <div className="chek-title-row">
           <h1 className="chek-title">{entry.title}</h1>
-          <Link href="/wiki" className="chek-chip gray">
-            返回
-          </Link>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Link href={`/wiki/${encodeURIComponent(entry.slug)}/edit`} className="chek-chip">
+              参与编辑
+            </Link>
+            <Link href="/wiki" className="chek-chip gray">
+              返回
+            </Link>
+          </div>
         </div>
       </header>
 

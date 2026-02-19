@@ -31,8 +31,18 @@ export type PostDTO = {
   isPublic: boolean;
   isIndexable: boolean;
   commentCount: number;
+  likeCount?: number;
+  favoriteCount?: number;
+  likedByMe?: boolean;
+  favoritedByMe?: boolean;
   createdAt?: string;
   updatedAt?: string;
+};
+
+export type FollowStatusDTO = {
+  userOneId: string;
+  following: boolean;
+  followerCount: number;
 };
 
 export type CommentDTO = {
@@ -80,4 +90,3 @@ export type GetMediaResponse = {
   getUrl: string;
   mock: boolean;
 };
-

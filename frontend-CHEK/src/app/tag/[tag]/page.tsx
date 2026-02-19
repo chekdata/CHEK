@@ -4,7 +4,8 @@ import { serverGet } from '@/lib/server-api';
 import type { PostDTO, WikiEntryDTO } from '@/lib/api-types';
 import { absoluteUrl, makePageMetadata } from '@/lib/seo';
 import { WikiCard } from '@/components/WikiCard';
-import { PostCard } from '@/components/PostCard';
+import { TagFollowButton } from '@/app/tag/[tag]/TagFollowButton';
+import { TagPostsClient } from '@/app/tag/[tag]/TagPostsClient';
 
 export const revalidate = 120;
 
@@ -23,6 +24,7 @@ export async function generateMetadata({
     path: `/tag/${encodeURIComponent(safeTag)}`,
     ogType: 'website',
     keywords: [safeTag, '潮汕', 'CHEK'],
+    shareTitle: `#${safeTag} | 标签 · 潮客 CHEK`,
   });
 }
 
@@ -32,25 +34,6 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
   const safeTag = tag || '标签';
 
   const canonical = absoluteUrl(`/tag/${encodeURIComponent(safeTag)}`);
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@graph': [
-      {
-        '@type': 'CollectionPage',
-        mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
-        name: `#${safeTag}`,
-        description: `查看 #${safeTag} 下的有知词条与相辅帖子。`,
-        inLanguage: 'zh-CN',
-      },
-      {
-        '@type': 'BreadcrumbList',
-        itemListElement: [
-          { '@type': 'ListItem', position: 1, name: '相辅', item: absoluteUrl('/feed') },
-          { '@type': 'ListItem', position: 2, name: `#${safeTag}`, item: canonical },
-        ],
-      },
-    ],
-  };
 
   const wiki =
     (await serverGet<WikiEntryDTO[]>(
@@ -64,6 +47,50 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
       { revalidateSeconds: 60 }
     )) || [];
 
+  const indexableWiki = wiki.filter((e) => e?.isPublic && e?.isIndexable && !!String(e?.slug || '').trim());
+  const indexablePosts = posts.filter((p) => p?.isPublic && p?.isIndexable && Number.isFinite(p?.postId));
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'CollectionPage',
+        mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
+        url: canonical,
+        name: `#${safeTag}`,
+        description: `查看 #${safeTag} 下的有知词条与相辅帖子。`,
+        inLanguage: 'zh-CN',
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: '相辅', item: absoluteUrl('/feed') },
+          { '@type': 'ListItem', position: 2, name: `#${safeTag}`, item: canonical },
+        ],
+      },
+      {
+        '@type': 'ItemList',
+        name: `#${safeTag} · 有知`,
+        itemListElement: indexableWiki.map((e, idx) => ({
+          '@type': 'ListItem',
+          position: idx + 1,
+          name: e.title,
+          item: absoluteUrl(`/wiki/${encodeURIComponent(e.slug)}`),
+        })),
+      },
+      {
+        '@type': 'ItemList',
+        name: `#${safeTag} · 相辅`,
+        itemListElement: indexablePosts.map((p, idx) => ({
+          '@type': 'ListItem',
+          position: idx + 1,
+          name: (p.title || '').trim() || '相辅',
+          item: absoluteUrl(`/p/${p.postId}`),
+        })),
+      },
+    ],
+  };
+
   return (
     <div className="chek-shell" style={{ paddingBottom: 24 }}>
       <header className="chek-header">
@@ -74,9 +101,7 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
           </Link>
         </div>
         <div style={{ marginTop: 12, display: 'flex', gap: 10 }}>
-          <button className="chek-chip gray" style={{ border: 'none' }} disabled>
-            关注（占位）
-          </button>
+          <TagFollowButton tag={safeTag} />
           <Link href={`/post/new?tag=${encodeURIComponent(safeTag)}`} className="chek-chip">
             + 来相辅
           </Link>
@@ -98,16 +123,7 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
         </section>
 
         <section className="chek-card" style={{ padding: 16 }}>
-          <div style={{ fontWeight: 900, marginBottom: 10 }}>相辅</div>
-          <div style={{ display: 'grid', gap: 10 }}>
-            {posts.length > 0 ? (
-              posts.map((p) => <PostCard key={p.postId} post={p} />)
-            ) : (
-              <div className="chek-muted" style={{ lineHeight: 1.7 }}>
-                这个标签下暂时还没有相辅。欢迎你先发一条，我们一起把信息补齐。
-              </div>
-            )}
-          </div>
+          <TagPostsClient tag={safeTag} initialPosts={posts} />
         </section>
       </main>
 

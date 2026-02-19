@@ -3,6 +3,7 @@ import { getSiteBasePath, getSiteUrl } from '@/lib/site';
 
 export const SITE_NAME = '潮客 CHEK';
 export const DEFAULT_DESCRIPTION = '有知（百科）+ 相辅（帖子与评论）。欢迎你来潮汕，路上辛苦了。';
+export const DEFAULT_OG_IMAGE_PATH = '/og.png';
 
 function normalizePath(path: string): string {
   const raw = String(path || '').trim();
@@ -32,6 +33,38 @@ export function safeMetadataBase(): URL {
   } catch {
     return new URL('http://localhost:3000');
   }
+}
+
+export function isBadShareImageUrl(raw: string | null | undefined): boolean {
+  const u = String(raw || '').trim();
+  if (!u) return true;
+  if (/^data:/i.test(u)) return true;
+  if (/^blob:/i.test(u)) return true;
+  if (/^file:/i.test(u)) return true;
+  if (/\.svg(\?.*)?$/i.test(u)) return true;
+  return false;
+}
+
+export function normalizeMetaUrl(raw: string | null | undefined): string {
+  const s = String(raw || '').trim();
+  if (!s) return '';
+  if (s.startsWith('http://') || s.startsWith('https://')) return s;
+  if (s.startsWith('/')) return absoluteUrl(s);
+  return '';
+}
+
+export function extractFirstImageUrlFromMarkdown(md: string | null | undefined): string {
+  const s = String(md || '');
+
+  // Markdown image: ![alt](url "title")
+  const m1 = s.match(/!\[[^\]]*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)/);
+  if (m1 && m1[1]) return String(m1[1]).trim();
+
+  // HTML image: <img src="...">
+  const m2 = s.match(/<img[^>]+src=[\"']([^\"']+)[\"'][^>]*>/i);
+  if (m2 && m2[1]) return String(m2[1]).trim();
+
+  return '';
 }
 
 export function stripMarkdownToText(input: string): string {
@@ -74,12 +107,21 @@ export function makePageMetadata(args: {
   keywords?: string[];
   publishedTime?: string;
   modifiedTime?: string;
+  imageUrl?: string;
+  imageAlt?: string;
+  shareTitle?: string;
+  shareDescription?: string;
 }): Metadata {
   const title = String(args.title || '').trim() || SITE_NAME;
   const description = String(args.description || '').trim() || DEFAULT_DESCRIPTION;
+  const shareTitle = String(args.shareTitle || '').trim() || title;
+  const shareDescription = String(args.shareDescription || '').trim() || description;
   const canonical = absoluteUrl(args.path);
   const ogType = args.ogType || 'website';
-  const ogImage = absoluteUrl('/og.png');
+  const fallbackOgImage = absoluteUrl(DEFAULT_OG_IMAGE_PATH);
+  const customOgImage = normalizeMetaUrl(args.imageUrl);
+  const ogImage = customOgImage && !isBadShareImageUrl(customOgImage) ? customOgImage : fallbackOgImage;
+  const imageAlt = String(args.imageAlt || '').trim() || SITE_NAME;
 
   const robots = args.noindex
     ? {
@@ -103,10 +145,14 @@ export function makePageMetadata(args: {
       type: ogType,
       locale: 'zh_CN',
       siteName: SITE_NAME,
-      title,
-      description,
+      title: shareTitle,
+      description: shareDescription,
       url: canonical,
-      images: [{ url: ogImage, alt: SITE_NAME }],
+      images: [
+        fallbackOgImage === ogImage
+          ? { url: ogImage, alt: imageAlt, width: 1200, height: 630, type: 'image/png' }
+          : { url: ogImage, alt: imageAlt },
+      ],
       ...(ogType === 'article'
         ? {
             article: {
@@ -119,10 +165,9 @@ export function makePageMetadata(args: {
     },
     twitter: {
       card: 'summary_large_image',
-      title,
-      description,
+      title: shareTitle,
+      description: shareDescription,
       images: [ogImage],
     },
   };
 }
-

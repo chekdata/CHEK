@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { clientFetch } from '@/lib/client-api';
 import { setToken } from '@/lib/token';
+import { saveCurrentUserProfile } from '@/lib/user-display';
 import { markWelcomePendingIfFirstLogin } from '@/lib/welcome';
 import {
   buildWechatOAuthUrl,
@@ -81,6 +82,12 @@ export default function LoginClient(props: LoginClientProps) {
       const token = dto?.accessToken || dto?.AccessToken || dto?.token || '';
       if (!token) throw new Error('登录返回缺少 accessToken');
       setToken(String(token));
+      saveCurrentUserProfile({
+        userOneId: String(dto?.userOneId || '').trim(),
+        nickName: String(dto?.nickName || dto?.nickname || '').trim(),
+        userName: String(dto?.userName || '').trim(),
+        avatarUrl: String(dto?.avatarUrl || '').trim(),
+      });
       markWelcomePendingIfFirstLogin();
       router.replace(next);
     } catch (e: any) {

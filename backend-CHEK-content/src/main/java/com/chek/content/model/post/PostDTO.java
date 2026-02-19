@@ -18,6 +18,10 @@ public class PostDTO {
   private boolean isPublic;
   private boolean isIndexable;
   private long commentCount;
+  private long likeCount;
+  private long favoriteCount;
+  private boolean likedByMe;
+  private boolean favoritedByMe;
   private Instant createdAt;
   private Instant updatedAt;
 
@@ -127,6 +131,38 @@ public class PostDTO {
 
   public void setCommentCount(long commentCount) {
     this.commentCount = commentCount;
+  }
+
+  public long getLikeCount() {
+    return likeCount;
+  }
+
+  public void setLikeCount(long likeCount) {
+    this.likeCount = likeCount;
+  }
+
+  public long getFavoriteCount() {
+    return favoriteCount;
+  }
+
+  public void setFavoriteCount(long favoriteCount) {
+    this.favoriteCount = favoriteCount;
+  }
+
+  public boolean isLikedByMe() {
+    return likedByMe;
+  }
+
+  public void setLikedByMe(boolean likedByMe) {
+    this.likedByMe = likedByMe;
+  }
+
+  public boolean isFavoritedByMe() {
+    return favoritedByMe;
+  }
+
+  public void setFavoritedByMe(boolean favoritedByMe) {
+    this.favoritedByMe = favoritedByMe;
   }
 
   public Instant getCreatedAt() {

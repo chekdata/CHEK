@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { makePageMetadata } from '@/lib/seo';
+import FavoritesClient from '@/app/me/favorites/FavoritesClient';
 
 export const metadata: Metadata = makePageMetadata({
   title: '我的收藏 - CHEK',
-  description: '我的收藏（占位）。',
+  description: '我的收藏：你在相辅里收藏过的内容。',
   path: '/me/favorites',
   ogType: 'website',
   noindex: true,
@@ -24,22 +25,7 @@ export default function FavoritesPage() {
       </header>
 
       <main className="chek-section">
-        <div className="chek-card" style={{ padding: 16 }}>
-          <div style={{ fontWeight: 900, marginBottom: 8 }}>先占位</div>
-          <div className="chek-muted" style={{ lineHeight: 1.7 }}>
-            收藏功能可以做，但 MVP 先把“有知 + 相辅（发帖+评论）”跑顺。
-            <br />
-            给你添麻烦了，先抱歉。
-          </div>
-          <div style={{ marginTop: 12, display: 'flex', gap: 10 }}>
-            <Link href="/wiki" className="chek-chip gray">
-              去有知
-            </Link>
-            <Link href="/feed" className="chek-chip gray">
-              去相辅
-            </Link>
-          </div>
-        </div>
+        <FavoritesClient />
       </main>
     </div>
   );

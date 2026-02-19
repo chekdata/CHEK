@@ -5,7 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { clientFetch } from '@/lib/client-api';
 import { setToken } from '@/lib/token';
+import { saveCurrentUserProfile } from '@/lib/user-display';
 import { markWelcomePendingIfFirstLogin } from '@/lib/welcome';
+import { SkeletonBlock, SkeletonLines } from '@/components/Skeleton';
 import {
   buildWechatOAuthUrl,
   consumeWechatOauthAttempt,
@@ -70,6 +72,12 @@ export default function WeChatCallbackClient(props: WeChatCallbackClientProps) {
         if (!token) throw new Error('登录成功但缺少 accessToken');
 
         setToken(token);
+        saveCurrentUserProfile({
+          userOneId: String((dto as any)?.userOneId || '').trim(),
+          nickName: String((dto as any)?.nickName || (dto as any)?.nickname || '').trim(),
+          userName: String((dto as any)?.userName || '').trim(),
+          avatarUrl: String((dto as any)?.avatarUrl || '').trim(),
+        });
         markWelcomePendingIfFirstLogin();
 
         if (canceled) return;
@@ -121,12 +129,19 @@ export default function WeChatCallbackClient(props: WeChatCallbackClientProps) {
 
       <main className="chek-section" style={{ display: 'grid', gap: 12 }}>
         <div className="chek-card" style={{ padding: 16 }}>
-          <div style={{ fontWeight: 900, marginBottom: 8 }}>
-            {status === 'loading' ? '登录中…' : status === 'ok' ? '已登录' : '登录失败'}
-          </div>
-          <div className="chek-muted" style={{ lineHeight: 1.7 }}>
-            {msg}
-          </div>
+          {status === 'loading' ? (
+            <div style={{ display: 'grid', gap: 10 }}>
+              <SkeletonBlock width="38%" height={18} radius={10} />
+              <SkeletonLines lines={2} widths={['86%', '62%']} lineHeight={12} />
+            </div>
+          ) : (
+            <>
+              <div style={{ fontWeight: 900, marginBottom: 8 }}>{status === 'ok' ? '已登录' : '登录失败'}</div>
+              <div className="chek-muted" style={{ lineHeight: 1.7 }}>
+                {msg}
+              </div>
+            </>
+          )}
         </div>
 
         {status === 'error' ? (

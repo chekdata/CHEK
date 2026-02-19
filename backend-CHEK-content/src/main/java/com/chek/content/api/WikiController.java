@@ -9,6 +9,7 @@ import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -62,11 +63,24 @@ public class WikiController {
 
   @PostMapping("/entries")
   public ResponseData<WikiEntryDTO> createEntry(
-      @RequestHeader(name = "X-Is-Admin", required = false) String isAdminHeader,
+      @RequestHeader(name = "X-User-One-Id", required = false) String userOneId,
       @Valid @RequestBody CreateWikiEntryRequest req) {
-    if (isAdminHeader == null || !isAdminHeader.equalsIgnoreCase("true")) {
-      return ResponseData.error("FORBIDDEN", "admin only");
+    if (userOneId == null || userOneId.isBlank()) {
+      return ResponseData.error("UNAUTHORIZED", "missing X-User-One-Id");
     }
     return ResponseData.ok(wikiRepository.create(req));
+  }
+
+  @PutMapping("/entries/{id}")
+  public ResponseData<WikiEntryDTO> updateEntry(
+      @PathVariable("id") long id,
+      @RequestHeader(name = "X-User-One-Id", required = false) String userOneId,
+      @Valid @RequestBody CreateWikiEntryRequest req) {
+    if (userOneId == null || userOneId.isBlank()) {
+      return ResponseData.error("UNAUTHORIZED", "missing X-User-One-Id");
+    }
+    WikiEntryDTO dto = wikiRepository.update(id, req);
+    if (dto == null) return ResponseData.error("NOT_FOUND", "wiki entry not found");
+    return ResponseData.ok(dto);
   }
 }

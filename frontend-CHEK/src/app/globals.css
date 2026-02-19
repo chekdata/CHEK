@@ -426,6 +426,23 @@ a {
   color: var(--chek-muted);
 }
 
+.chek-loading-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.chek-loading-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -140%;
+  width: 80%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.72), transparent);
+  animation: chekLoadingSweep 1.4s ease-in-out infinite;
+}
+
 .chek-modal-overlay {
   position: fixed;
   inset: 0;
@@ -567,6 +584,342 @@ a {
   }
   100% {
     left: 100%;
+  }
+}
+
+@keyframes chekLoadingSweep {
+  100% {
+    left: 180%;
+  }
+}
+
+.chek-me-scroll {
+  min-height: 100vh;
+  overflow-y: auto;
+  padding-bottom: 104px;
+}
+
+.chek-me-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 16;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 44px;
+  padding: calc(env(safe-area-inset-top) + 8px) 16px 10px;
+  background: rgba(242, 244, 248, 0.86);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.chek-me-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(29, 29, 31, 0.9);
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+.chek-me-icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.chek-me-profile {
+  padding: 8px 20px 16px;
+}
+
+.chek-me-profile-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.chek-me-avatar-wrap {
+  position: relative;
+  margin-right: 24px;
+}
+
+.chek-me-avatar {
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: linear-gradient(135deg, rgba(51, 136, 255, 0.16), rgba(70, 235, 213, 0.16));
+  border: 2px solid rgba(255, 255, 255, 0.82);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+}
+
+.chek-me-level {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 2px 6px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #ffd700, #ffa500);
+  border: 2px solid #fff;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.chek-me-stats {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.chek-me-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.chek-me-stat-num {
+  font-size: 18px;
+  font-weight: 700;
+  color: #000;
+}
+
+.chek-me-stat-label {
+  font-size: 12px;
+  color: #666;
+}
+
+.chek-me-name {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.chek-me-id {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 10px;
+}
+
+.chek-me-bio {
+  font-size: 14px;
+  line-height: 1.55;
+  color: #333;
+  margin-bottom: 14px;
+}
+
+.chek-me-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.chek-me-tag {
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: rgba(51, 136, 255, 0.08);
+  color: var(--chek-primary);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.chek-me-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.chek-me-btn {
+  flex: 1;
+  height: 40px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  color: #333;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.chek-me-icon-pill {
+  width: 44px;
+  height: 40px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.62);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(29, 29, 31, 0.85);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.chek-me-icon-pill svg {
+  width: 18px;
+  height: 18px;
+}
+
+.chek-me-sticky-tabs {
+  position: sticky;
+  top: calc(env(safe-area-inset-top) + 44px);
+  z-index: 14;
+  display: flex;
+  gap: 24px;
+  padding: 12px 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.02);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  background: rgba(242, 244, 248, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.chek-me-tab {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: #999;
+  font-size: 16px;
+  font-weight: 600;
+  position: relative;
+}
+
+.chek-me-tab.active {
+  color: #000;
+}
+
+.chek-me-tab.active::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -7px;
+  width: 20px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--chek-primary);
+}
+
+.chek-me-tab[disabled] {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.chek-me-masonry {
+  padding: 12px;
+  column-count: 2;
+  column-gap: 12px;
+}
+
+.chek-me-post-card {
+  display: inline-block;
+  width: 100%;
+  break-inside: avoid;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.chek-me-post-media {
+  width: 100%;
+  background: linear-gradient(145deg, rgba(51, 136, 255, 0.25), rgba(70, 235, 213, 0.25));
+  display: flex;
+  align-items: flex-end;
+  padding: 8px;
+}
+
+.chek-me-post-media span {
+  border-radius: 10px;
+  padding: 3px 8px;
+  background: rgba(255, 255, 255, 0.7);
+  color: rgba(0, 0, 0, 0.68);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.chek-me-post-body {
+  padding: 10px;
+}
+
+.chek-me-post-title {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.chek-me-post-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chek-me-mini-user {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #666;
+}
+
+.chek-me-mini-avatar {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ccc;
+}
+
+.chek-me-mini-like {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: #999;
+}
+
+.chek-me-mini-like svg {
+  width: 12px;
+  height: 12px;
+}
+
+.chek-me-empty-card {
+  break-inside: avoid;
+  margin-bottom: 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  padding: 14px;
+  column-span: all;
+}
+
+.chek-me-empty-title {
+  margin-bottom: 8px;
+  font-weight: 800;
+}
+
+@media (max-width: 360px) {
+  .chek-me-stats {
+    gap: 4px;
+  }
+
+  .chek-me-stat-num {
+    font-size: 16px;
+  }
+
+  .chek-me-stat-label {
+    font-size: 11px;
   }
 }
 
