@@ -2,4 +2,4 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-exec bash "$ROOT_DIR/skills/chek-vibe-cobuild/scripts/dev-write-env-local.sh" "$@"
+exec bash "$ROOT_DIR/skills/chek-vibe-cobuild/scripts/sync-to-codex.sh" "$@"

@@ -5,6 +5,8 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 LOG_DIR="$ROOT_DIR/.logs"
 mkdir -p "$LOG_DIR"
 
+FRONTEND_PORT="${CHEK_FRONTEND_PORT:-3000}"
+
 if [[ "${CHEK_PRODLIKE:-}" == "1" ]]; then
   bash "$ROOT_DIR/skills/chek-vibe-cobuild/scripts/dev-db-up.sh"
   bash "$ROOT_DIR/skills/chek-vibe-cobuild/scripts/dev-write-env-local.sh"
@@ -110,11 +112,13 @@ start_mvn_service "chek-media" "backend-CHEK-media" 8083
 start_node_service "chek-dev-gateway" "backend-CHEK-dev-gateway" 8787 npm run dev
 
 if [[ ! -f "$ROOT_DIR/frontend-CHEK/.env.local" ]]; then
-  cat >"$ROOT_DIR/frontend-CHEK/.env.local" <<'EOF'
+  cat >"$ROOT_DIR/frontend-CHEK/.env.local" <<EOF
 CHEK_API_BASE_URL=http://localhost:8787
-CHEK_SITE_URL=http://localhost:3000
+CHEK_SITE_URL=http://localhost:$FRONTEND_PORT
 EOF
   echo "[frontend] wrote frontend-CHEK/.env.local"
+elif [[ "${CHEK_FRONTEND_PORT:-}" != "" ]]; then
+  echo "[frontend] NOTE: frontend-CHEK/.env.local exists; update CHEK_SITE_URL if you changed CHEK_FRONTEND_PORT=$FRONTEND_PORT"
 fi
 
 if [[ "${CHEK_CLEAN_NEXT_CACHE:-}" == "1" ]]; then
@@ -122,11 +126,11 @@ if [[ "${CHEK_CLEAN_NEXT_CACHE:-}" == "1" ]]; then
   rm -r "$ROOT_DIR/frontend-CHEK/.next" 2>/dev/null || true
 fi
 
-start_node_service "frontend-chek" "frontend-CHEK" 3000 npm run dev
+start_node_service "frontend-chek" "frontend-CHEK" "$FRONTEND_PORT" ./node_modules/.bin/next dev -p "$FRONTEND_PORT"
 
 echo ""
 echo "DEV is up:"
-echo "- frontend:    http://localhost:3000"
+echo "- frontend:    http://localhost:$FRONTEND_PORT"
 echo "- dev-gateway: http://localhost:8787"
 echo "- content:     http://localhost:8081 (healthz=/healthz)"
 echo "- ai:          http://localhost:8082 (healthz=/healthz)"

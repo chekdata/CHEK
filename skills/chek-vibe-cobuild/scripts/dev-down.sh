@@ -4,6 +4,8 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 LOG_DIR="$ROOT_DIR/.logs"
 
+FRONTEND_PORT="${CHEK_FRONTEND_PORT:-3000}"
+
 port_pid() {
   local port="$1"
   lsof -nP -iTCP:"$port" -sTCP:LISTEN -t 2>/dev/null || true
@@ -37,7 +39,7 @@ rm_pidfile() {
   rm -f "$LOG_DIR/$name.pid" 2>/dev/null || true
 }
 
-kill_port "frontend-chek" 3000
+kill_port "frontend-chek" "$FRONTEND_PORT"
 kill_port "chek-dev-gateway" 8787
 kill_port "chek-media" 8083
 kill_port "chek-ai" 8082
