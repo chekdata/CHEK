@@ -19,35 +19,24 @@ function Icon(props: { name: 'feed' | 'wiki' | 'ai' | 'me'; active: boolean }) {
   if (props.name === 'feed') {
     return (
       <svg {...common} aria-hidden>
-        <path d="M8 6h13" />
-        <path d="M3 6h.01" />
-        <path d="M8 12h13" />
-        <path d="M3 12h.01" />
-        <path d="M8 18h13" />
-        <path d="M3 18h.01" />
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
       </svg>
     );
   }
   if (props.name === 'wiki') {
     return (
       <svg {...common} aria-hidden>
-        <path d="M4 19a2 2 0 0 0 2 2h12" />
-        <path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2V5z" />
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
       </svg>
     );
   }
   if (props.name === 'ai') {
     return (
       <svg {...common} aria-hidden>
-        <path d="M12 2v3" />
-        <path d="M12 19v3" />
-        <path d="M4.2 4.2l2.1 2.1" />
-        <path d="M17.7 17.7l2.1 2.1" />
-        <path d="M2 12h3" />
-        <path d="M19 12h3" />
-        <path d="M4.2 19.8l2.1-2.1" />
-        <path d="M17.7 6.3l2.1-2.1" />
-        <path d="M12 7a5 5 0 1 0 5 5" />
+        <path d="M12 2a10 10 0 1 0 10 10H12V2z" />
+        <path d="M12 2a10 10 0 0 1 10 10" />
+        <path d="M12 12L2.5 7.5" />
       </svg>
     );
   }
@@ -76,8 +65,13 @@ export function TabBar() {
           <div>有知</div>
         </Link>
 
-        <Link href="/post/new" className="chek-plus" aria-label="+ 来相辅">
-          + 来相辅
+        <Link href="/post/new" className="chek-fab-wrapper" aria-label="+ 来相辅">
+          <div className="chek-fab-btn" aria-hidden>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </div>
         </Link>
 
         <Link href="/ai" className={clsx('chek-tab', active('/ai') && 'active')}>
@@ -93,4 +87,3 @@ export function TabBar() {
     </nav>
   );
 }
-

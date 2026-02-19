@@ -2,14 +2,22 @@
   --chek-primary: #3388ff;
   --chek-secondary: #46ebd5;
   --chek-accent: #d377cd;
-  --chek-bg: #f6f7fb;
-  --chek-text: #101014;
-  --chek-muted: rgba(16, 16, 20, 0.55);
+  --chek-bg: #f2f4f8;
+  --chek-text: #1d1d1f;
+  --chek-muted: #86868b;
   --chek-card: rgba(255, 255, 255, 0.78);
   --chek-border: rgba(0, 0, 0, 0.06);
   --chek-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
   --chek-radius-lg: 24px;
   --chek-radius-md: 16px;
+
+  /* Liquid Glass (UI 目录参考) */
+  --chek-glass-bg: rgba(255, 255, 255, 0.65);
+  --chek-glass-border: rgba(255, 255, 255, 0.4);
+  --chek-glass-shine: rgba(255, 255, 255, 0.8);
+  --chek-blur: 30px;
+  --chek-shadow-card: 0 12px 32px -8px rgba(51, 136, 255, 0.1);
+  --chek-shadow-neon: 0 0 15px rgba(70, 235, 213, 0.4);
 }
 
 * {
@@ -26,6 +34,7 @@ body {
   color: var(--chek-text);
   background: var(--chek-bg);
   font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+  overflow-x: hidden;
 }
 
 a {
@@ -45,30 +54,47 @@ a {
   border-radius: 50%;
   filter: blur(60px);
   opacity: 0.35;
+  animation: chekFloat 12s infinite ease-in-out;
 }
 
 .chek-orb.blue {
-  width: 320px;
-  height: 320px;
-  left: -120px;
-  top: -120px;
+  width: 250px;
+  height: 250px;
+  left: -50px;
+  top: -80px;
   background: var(--chek-primary);
+  opacity: 0.15;
+  animation-delay: 0s;
 }
 
 .chek-orb.cyan {
-  width: 360px;
-  height: 360px;
-  right: -140px;
-  top: 120px;
+  width: 200px;
+  height: 200px;
+  right: -60px;
+  bottom: 100px;
   background: var(--chek-secondary);
+  opacity: 0.15;
+  animation-delay: -5s;
 }
 
 .chek-orb.pink {
-  width: 320px;
-  height: 320px;
-  left: 40px;
-  bottom: -160px;
+  width: 150px;
+  height: 150px;
+  left: 30%;
+  top: 40%;
   background: var(--chek-accent);
+  opacity: 0.1;
+  animation-delay: -2s;
+}
+
+@keyframes chekFloat {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(15px, -15px) scale(1.1);
+  }
 }
 
 .chek-shell {
@@ -83,9 +109,13 @@ a {
   top: 0;
   z-index: 20;
   padding: calc(env(safe-area-inset-top) + 12px) 16px 12px;
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(18px);
-  border-bottom: 1px solid var(--chek-border);
+  border-radius: 0 0 24px 24px;
+  background: var(--chek-glass-bg);
+  backdrop-filter: blur(var(--chek-blur));
+  -webkit-backdrop-filter: blur(var(--chek-blur));
+  border: 1px solid var(--chek-glass-border);
+  border-top: 1px solid var(--chek-glass-shine);
+  box-shadow: var(--chek-shadow-card);
 }
 
 .chek-title-row {
@@ -101,6 +131,160 @@ a {
   letter-spacing: -0.5px;
   font-weight: 900;
   margin: 0;
+}
+
+.chek-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  gap: 12px;
+}
+
+.chek-page-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.chek-search-bar {
+  flex: 1;
+  height: 44px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--chek-glass-border);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 8px;
+  color: var(--chek-muted);
+  font-size: 15px;
+  min-width: 0;
+}
+
+.chek-search-bar span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chek-filter-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+}
+
+.chek-chips-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 16px 16px;
+  scrollbar-width: none;
+}
+
+.chek-chip-pill {
+  flex: 0 0 auto;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--chek-glass-border);
+  white-space: nowrap;
+  color: var(--chek-text);
+  transition: all 0.2s;
+}
+
+.chek-chip-pill.active {
+  background: rgba(51, 136, 255, 0.1);
+  color: var(--chek-primary);
+  border-color: rgba(51, 136, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(51, 136, 255, 0.15);
+}
+
+.chek-feed-list {
+  padding: 16px;
+  display: grid;
+  gap: 16px;
+}
+
+.chek-post-card {
+  border-radius: 24px;
+  padding: 20px;
+  position: relative;
+}
+
+.chek-author-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+.chek-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #ddd;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+}
+
+.chek-author-name {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.chek-author-meta {
+  font-size: 11px;
+  color: var(--chek-muted);
+  margin-top: 2px;
+}
+
+.chek-card-text {
+  font-size: 15px;
+  line-height: 1.6;
+  margin-bottom: 12px;
+  color: var(--chek-text);
+}
+
+.chek-media-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.chek-media-item {
+  height: 120px;
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.chek-action-row {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  margin-top: 12px;
+}
+
+.chek-action-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--chek-muted);
+}
+
+.chek-action-item.active {
+  color: var(--chek-primary);
+  font-weight: 600;
 }
 
 .chek-search {
@@ -119,9 +303,12 @@ a {
 }
 
 .chek-card {
-  background: var(--chek-card);
-  border: 1px solid rgba(255, 255, 255, 0.65);
-  box-shadow: var(--chek-shadow);
+  background: var(--chek-glass-bg);
+  backdrop-filter: blur(var(--chek-blur));
+  -webkit-backdrop-filter: blur(var(--chek-blur));
+  border: 1px solid var(--chek-glass-border);
+  border-top: 1px solid var(--chek-glass-shine);
+  box-shadow: var(--chek-shadow-card);
   border-radius: var(--chek-radius-lg);
 }
 
@@ -157,9 +344,14 @@ a {
   width: min(420px, 100%);
   padding: 10px 12px calc(env(safe-area-inset-bottom) + 10px);
   z-index: 30;
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(18px);
-  border-top: 1px solid var(--chek-border);
+  background: var(--chek-glass-bg);
+  backdrop-filter: blur(var(--chek-blur));
+  -webkit-backdrop-filter: blur(var(--chek-blur));
+  border: 1px solid var(--chek-glass-border);
+  border-bottom: none;
+  border-top: 1px solid var(--chek-glass-shine);
+  border-radius: 32px 32px 0 0;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.05);
 }
 
 .chek-tabbar-row {
@@ -173,14 +365,15 @@ a {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: rgba(0, 0, 0, 0.55);
-  font-weight: 700;
+  gap: 4px;
+  font-size: 10px;
+  color: #999;
+  font-weight: 600;
 }
 
 .chek-tab.active {
   color: var(--chek-primary);
+  font-weight: 700;
 }
 
 .chek-plus {
@@ -196,6 +389,33 @@ a {
   box-shadow: 0 10px 24px rgba(51, 136, 255, 0.18);
   color: var(--chek-primary);
   font-weight: 900;
+}
+
+.chek-fab-wrapper {
+  width: 64px;
+  height: 64px;
+  margin-top: -30px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chek-fab-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--chek-primary), var(--chek-secondary));
+  box-shadow: 0 8px 20px rgba(51, 136, 255, 0.4), 0 0 0 4px rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.chek-icon-sm {
+  width: 18px;
+  height: 18px;
 }
 
 .chek-section {
@@ -348,4 +568,9 @@ a {
   100% {
     left: 100%;
   }
+}
+
+/* Hide scrollbars (UI 目录参考) */
+::-webkit-scrollbar {
+  display: none;
 }

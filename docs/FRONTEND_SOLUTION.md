@@ -10,6 +10,12 @@
 
 > 后端契约以 `/Users/jasonhong/Desktop/CHEK/docs/BACKEND_MICROSERVICES.md` 为准；本文关注 H5 架构与前端落地。
 
+## 0.1 线上部署形态（建议）
+
+- H5 主站域名：`https://chaoshan.chekkk.com`（根路径 `/`）
+- SEO/GEO 页：直接在 Next.js 输出语义化 HTML（SSR/SSG/ISR + JSON-LD）
+- `basePath`：默认不用；如未来需要挂载到子路径，再启用 `CHEK_BASE_PATH`
+
 ## 1. H5 技术选型（建议）
 
 - 框架：Next.js（App Router；SSR/SSG/ISR）

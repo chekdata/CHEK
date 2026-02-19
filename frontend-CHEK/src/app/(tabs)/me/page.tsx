@@ -93,6 +93,11 @@ export default function MePage() {
           <div className="chek-muted">看我发过的相辅，顺便看看大家怎么评论。</div>
         </Link>
 
+        <Link href="/me/drafts" className="chek-card" style={{ padding: 16 }}>
+          <div style={{ fontWeight: 900, marginBottom: 6 }}>草稿箱</div>
+          <div className="chek-muted">先占位，MVP 可后置。</div>
+        </Link>
+
         <Link href="/me/favorites" className="chek-card" style={{ padding: 16 }}>
           <div style={{ fontWeight: 900, marginBottom: 6 }}>我的收藏</div>
           <div className="chek-muted">先占位，MVP 可后置。</div>

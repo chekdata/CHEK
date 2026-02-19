@@ -43,30 +43,97 @@ export default async function PostDetailPage({ params }: { params: Promise<{ pos
 
   return (
     <div className="chek-shell" style={{ paddingBottom: 24 }}>
-      <header className="chek-header">
-        <div className="chek-title-row">
-          <h1 className="chek-title">相辅详情</h1>
-          <Link href="/feed" className="chek-chip gray">
-            返回
+      <header
+        className="chek-header"
+        style={{
+          background: 'linear-gradient(180deg, rgba(242,244,248,0.9) 0%, rgba(242,244,248,0) 100%)',
+          border: 'none',
+          boxShadow: 'none',
+          borderRadius: 0,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Link
+            href="/feed"
+            className="chek-card"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px solid rgba(255,255,255,0.55)',
+            }}
+            aria-label="返回"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
           </Link>
+
+          <div style={{ fontWeight: 900 }}>相辅</div>
+
+          <button
+            type="button"
+            className="chek-card"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px solid rgba(255,255,255,0.55)',
+              cursor: 'not-allowed',
+            }}
+            aria-label="更多（占位）"
+            disabled
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="1" />
+              <circle cx="19" cy="12" r="1" />
+              <circle cx="5" cy="12" r="1" />
+            </svg>
+          </button>
         </div>
       </header>
 
-      <main className="chek-section">
-        <article className="chek-card" style={{ padding: 16 }}>
-          <header style={{ display: 'grid', gap: 6 }}>
-            <div style={{ fontWeight: 900, fontSize: 18, lineHeight: 1.3 }}>
+      <main className="chek-section" style={{ paddingTop: 12 }}>
+        <article className="chek-card" style={{ padding: 18, borderRadius: 28 }}>
+          <header style={{ display: 'grid', gap: 12 }}>
+            <div className="chek-author-row" style={{ margin: 0 }}>
+              <div className="chek-avatar" aria-hidden style={{ width: 40, height: 40 }} />
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div className="chek-author-name">{post.authorUserOneId || '游客'}</div>
+                <div className="chek-author-meta">
+                  {post.createdAt ? new Date(post.createdAt).toLocaleString() : '—'}
+                  {post.locationName ? ` · ${post.locationName}` : ''}
+                </div>
+              </div>
+              <button
+                type="button"
+                className="chek-chip gray"
+                style={{ border: 'none', cursor: 'not-allowed', height: 32 }}
+                disabled
+              >
+                关注
+              </button>
+            </div>
+
+            <div style={{ fontWeight: 900, fontSize: 20, lineHeight: 1.25 }}>
               {post.title?.trim() || '无标题'}
             </div>
-            <div className="chek-muted" style={{ fontSize: 12, fontWeight: 800 }}>
-              {post.authorUserOneId} ·{' '}
-              {post.createdAt ? new Date(post.createdAt).toLocaleString() : '—'}
-              {post.locationName ? ` · ${post.locationName}` : ''}
-            </div>
+
             {post.tags && post.tags.length > 0 ? (
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {post.tags.map((t) => (
-                  <Link key={t} href={`/tag/${encodeURIComponent(t)}`} className="chek-chip" style={{ padding: '6px 10px' }}>
+                  <Link
+                    key={t}
+                    href={`/tag/${encodeURIComponent(t)}`}
+                    className="chek-chip"
+                    style={{ padding: '6px 10px' }}
+                  >
                     #{t}
                   </Link>
                 ))}
