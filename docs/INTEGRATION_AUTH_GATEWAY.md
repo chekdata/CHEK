@@ -44,6 +44,7 @@ OpenAPI：`https://api-dev.chekkk.com/api/auth/openapi.json`
 注意：
 
 - `redirect_uri` 必须 URL 编码，且域名需在微信后台配置为“网页授权回调域名”。
+- `POST /api/auth/v1/wechat/login` 需同时提交 `packageName`（例如 `com.chek.app`），用于选择对应的微信 AppID/AppSecret 配置。
 - 若返回里 `mobilePhone` 为空：跳转绑定手机号页，调用 `POST /api/auth/v1/user/wechat/bindPhone` 补全。
 
 前端配置（Next.js H5）：
@@ -52,10 +53,12 @@ OpenAPI：`https://api-dev.chekkk.com/api/auth/openapi.json`
   - `CHEK_WECHAT_APP_ID`：微信 AppID（公开可见）
   - `CHEK_WECHAT_SCOPE`：微信内常用 `snsapi_base/snsapi_userinfo`（默认 `snsapi_userinfo`）
   - `CHEK_AUTH_CLIENT_ID`：auth-saas clientId（默认 `app`）
+  - `CHEK_WECHAT_PACKAGE_NAME`：包名（默认 `com.chek.app`）
 - 备选（构建期内联到前端 JS；修改需重建/重发版）：
   - `NEXT_PUBLIC_WECHAT_APP_ID`
   - `NEXT_PUBLIC_WECHAT_SCOPE`
   - `NEXT_PUBLIC_AUTH_CLIENT_ID`
+  - `NEXT_PUBLIC_WECHAT_PACKAGE_NAME`
 
 ## 3. 网关鉴权（双通行证）
 

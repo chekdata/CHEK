@@ -23,6 +23,7 @@ type WeChatCallbackClientProps = {
   wechatAppId?: string;
   wechatScope?: string;
   authClientId?: string;
+  wechatPackageName?: string;
 };
 
 export default function WeChatCallbackClient(props: WeChatCallbackClientProps) {
@@ -54,12 +55,13 @@ export default function WeChatCallbackClient(props: WeChatCallbackClientProps) {
 
       try {
         const clientId = String(props.authClientId || '').trim() || 'app';
+        const packageName = String(props.wechatPackageName || '').trim() || 'com.chek.app';
         const dto = await clientFetch<WechatLoginDTO>('/api/auth/v1/wechat/login', {
           method: 'POST',
           body: JSON.stringify({
             code,
             clientId,
-            scene: 'chek_h5',
+            packageName,
           }),
         });
 
@@ -91,7 +93,7 @@ export default function WeChatCallbackClient(props: WeChatCallbackClientProps) {
     return () => {
       canceled = true;
     };
-  }, [code, router, state]);
+  }, [code, router, state, props.authClientId, props.wechatPackageName]);
 
   function retryWechatLogin() {
     const appId = String(props.wechatAppId || '').trim();
