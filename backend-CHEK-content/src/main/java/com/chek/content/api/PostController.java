@@ -32,9 +32,10 @@ public class PostController {
       @RequestParam(name = "query", required = false) String query,
       @RequestParam(name = "tags", required = false) List<String> tags,
       @RequestParam(name = "authorUserOneId", required = false) String authorUserOneId,
+      @RequestHeader(name = "X-User-One-Id", required = false) String viewerUserOneId,
       @RequestParam(name = "cursor", required = false) Long cursor,
       @RequestParam(name = "limit", required = false, defaultValue = "20") int limit) {
-    return ResponseData.ok(postRepository.list(query, tags, authorUserOneId, cursor, limit));
+    return ResponseData.ok(postRepository.list(query, tags, authorUserOneId, viewerUserOneId, cursor, limit));
   }
 
   @GetMapping("/posts/{id}")
@@ -42,7 +43,7 @@ public class PostController {
       @PathVariable("id") long postId,
       @RequestHeader(name = "X-User-One-Id", required = false) String userOneId,
       @RequestHeader(name = "X-Is-Admin", required = false) String isAdminHeader) {
-    PostDTO dto = postRepository.get(postId);
+    PostDTO dto = postRepository.get(postId, userOneId);
     if (dto == null) return ResponseData.error("NOT_FOUND", "post not found");
 
     if (dto.isPublic() && dto.isIndexable()) return ResponseData.ok(dto);
