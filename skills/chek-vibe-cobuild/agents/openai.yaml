@@ -1,0 +1,4 @@
+interface:
+  display_name: "CHEK Vibe 共建"
+  short_description: "统一本地联调、数据种子与启动脚本的协作 skill"
+  default_prompt: "Use CHEK vibe co-build workflow to boot local services, seed data, and run validation commands safely."

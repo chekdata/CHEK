@@ -44,3 +44,4 @@ MVP 先把两件事做扎实：
 ## 6. 本地联调
 
 - 本地 DEV（前后端 + Auth 注入）：`/Users/jasonhong/Desktop/CHEK/docs/LOCAL_DEV.md`
+- 种子数据（生成/导入）：`/Users/jasonhong/Desktop/CHEK/docs/SEED_DATA.md`

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { serverGet } from '@/lib/server-api';
 import { WikiEntryDTO } from '@/lib/api-types';
-import { makePageMetadata } from '@/lib/seo';
+import { absoluteUrl, makePageMetadata } from '@/lib/seo';
 import { WikiCard } from '@/components/WikiCard';
 
 export const revalidate = 60;
@@ -20,12 +20,45 @@ export default async function WikiIndexPage() {
       revalidateSeconds: 60,
     })) || [];
 
+  const canonical = absoluteUrl('/wiki');
+  const indexableEntries = entries.filter((e) => e?.isPublic && e?.isIndexable && !!String(e?.slug || '').trim());
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'CollectionPage',
+        mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
+        url: canonical,
+        name: '有知',
+        description: '有知：潮汕旅行百科与要点整理。',
+        inLanguage: 'zh-CN',
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [{ '@type': 'ListItem', position: 1, name: '有知', item: canonical }],
+      },
+      {
+        '@type': 'ItemList',
+        name: '有知词条列表',
+        itemListElement: indexableEntries.map((e, idx) => ({
+          '@type': 'ListItem',
+          position: idx + 1,
+          name: e.title,
+          item: absoluteUrl(`/wiki/${encodeURIComponent(e.slug)}`),
+        })),
+      },
+    ],
+  };
+
   return (
     <>
       <header className="chek-header">
         <div className="chek-title-row">
           <h1 className="chek-title">有知</h1>
           <div style={{ display: 'flex', gap: 8 }}>
+            <Link href="/wiki/new" className="chek-chip">
+              共建有知
+            </Link>
             <Link href="/timeline" className="chek-chip gray">
               劳热
             </Link>
@@ -76,6 +109,12 @@ export default async function WikiIndexPage() {
           </div>
         )}
       </main>
+
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
     </>
   );
 }

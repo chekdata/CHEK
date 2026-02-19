@@ -23,6 +23,7 @@ export async function generateMetadata({
     path: `/tag/${encodeURIComponent(safeTag)}`,
     ogType: 'website',
     keywords: [safeTag, '潮汕', 'CHEK'],
+    shareTitle: `#${safeTag} | 标签 · 潮客 CHEK`,
   });
 }
 
@@ -32,25 +33,6 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
   const safeTag = tag || '标签';
 
   const canonical = absoluteUrl(`/tag/${encodeURIComponent(safeTag)}`);
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@graph': [
-      {
-        '@type': 'CollectionPage',
-        mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
-        name: `#${safeTag}`,
-        description: `查看 #${safeTag} 下的有知词条与相辅帖子。`,
-        inLanguage: 'zh-CN',
-      },
-      {
-        '@type': 'BreadcrumbList',
-        itemListElement: [
-          { '@type': 'ListItem', position: 1, name: '相辅', item: absoluteUrl('/feed') },
-          { '@type': 'ListItem', position: 2, name: `#${safeTag}`, item: canonical },
-        ],
-      },
-    ],
-  };
 
   const wiki =
     (await serverGet<WikiEntryDTO[]>(
@@ -63,6 +45,50 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
       `/api/chek-content/v1/posts?tags=${encodeURIComponent(safeTag)}&limit=20`,
       { revalidateSeconds: 60 }
     )) || [];
+
+  const indexableWiki = wiki.filter((e) => e?.isPublic && e?.isIndexable && !!String(e?.slug || '').trim());
+  const indexablePosts = posts.filter((p) => p?.isPublic && p?.isIndexable && Number.isFinite(p?.postId));
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'CollectionPage',
+        mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
+        url: canonical,
+        name: `#${safeTag}`,
+        description: `查看 #${safeTag} 下的有知词条与相辅帖子。`,
+        inLanguage: 'zh-CN',
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: '相辅', item: absoluteUrl('/feed') },
+          { '@type': 'ListItem', position: 2, name: `#${safeTag}`, item: canonical },
+        ],
+      },
+      {
+        '@type': 'ItemList',
+        name: `#${safeTag} · 有知`,
+        itemListElement: indexableWiki.map((e, idx) => ({
+          '@type': 'ListItem',
+          position: idx + 1,
+          name: e.title,
+          item: absoluteUrl(`/wiki/${encodeURIComponent(e.slug)}`),
+        })),
+      },
+      {
+        '@type': 'ItemList',
+        name: `#${safeTag} · 相辅`,
+        itemListElement: indexablePosts.map((p, idx) => ({
+          '@type': 'ListItem',
+          position: idx + 1,
+          name: (p.title || '').trim() || '相辅',
+          item: absoluteUrl(`/p/${p.postId}`),
+        })),
+      },
+    ],
+  };
 
   return (
     <div className="chek-shell" style={{ paddingBottom: 24 }}>

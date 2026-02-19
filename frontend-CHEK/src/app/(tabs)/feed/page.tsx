@@ -16,17 +16,25 @@ export const metadata: Metadata = makePageMetadata({
   path: '/feed',
   ogType: 'website',
   noindex: true,
-  keywords: ['潮汕', '避坑', '旅行', '相辅', 'CHEK'],
+  keywords: ['潮汕', '相辅', '寄宿家庭', '接送站', '求助', '投诉', 'CHEK'],
 });
 
 const HEADER_CHIPS: Array<{ label: string; href: string; active?: boolean }> = [
   { label: '# 全部', href: '/feed', active: true },
-  { label: '# 避坑', href: '/tag/%E9%81%BF%E5%9D%91' },
-  { label: '# 吃啥 (Chi Zho)', href: '/tag/%E5%90%83%E5%95%A5' },
-  { label: '# 住哪', href: '/tag/%E4%BD%8F%E5%93%AA' },
-  { label: '# 交通', href: '/tag/%E4%BA%A4%E9%80%9A' },
+  { label: '# 寄宿家庭', href: `/tag/${encodeURIComponent('寄宿家庭')}` },
+  { label: '# 接送站', href: `/tag/${encodeURIComponent('接送站')}` },
+  { label: '# 求助', href: `/tag/${encodeURIComponent('求助')}` },
+  { label: '# 投诉', href: `/tag/${encodeURIComponent('投诉')}` },
   { label: '# 劳热', href: '/timeline' },
 ];
+
+const LETTER_CARD_BASE = {
+  display: 'flex',
+  gap: 12,
+  alignItems: 'center',
+  padding: 14,
+  borderRadius: 22,
+} as const;
 
 export default async function FeedPage() {
   const posts =
@@ -41,7 +49,9 @@ export default async function FeedPage() {
         style={{ padding: `calc(env(safe-area-inset-top) + 10px) 0 0` }}
       >
         <div className="chek-top-row">
-          <div className="chek-page-title">相辅</div>
+          <h1 className="chek-page-title" style={{ margin: 0 }}>
+            相辅
+          </h1>
 
           <Link href="/search" className="chek-search-bar" aria-label="搜索">
             <svg
@@ -54,7 +64,7 @@ export default async function FeedPage() {
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
-            <span>搜：牌坊街 / 避坑 / 牛肉丸...</span>
+            <span>搜：寄宿家庭 / 接送站 / 求助 / 投诉...</span>
           </Link>
 
           <Link href="/search" className="chek-filter-btn" aria-label="筛选">
@@ -90,23 +100,86 @@ export default async function FeedPage() {
           href="/letter"
           className="chek-card"
           style={{
-            display: 'flex',
-            gap: 12,
-            alignItems: 'center',
-            padding: 14,
-            borderRadius: 22,
+            ...LETTER_CARD_BASE,
+            border: '1px solid rgba(51,136,255,0.16)',
             background:
-              'linear-gradient(135deg, rgba(51,136,255,0.12), rgba(70,235,213,0.10), rgba(211,119,205,0.08))',
+              'linear-gradient(135deg, rgba(227,243,255,0.95), rgba(222,249,246,0.88), rgba(247,240,255,0.82))',
           }}
         >
           <Image src={cat} alt="" width={44} height={44} style={{ borderRadius: 14 }} />
           <div style={{ minWidth: 0 }}>
+            <div
+              style={{
+                display: 'inline-flex',
+                borderRadius: 999,
+                padding: '2px 8px',
+                fontSize: 11,
+                fontWeight: 800,
+                color: 'rgba(20,78,168,0.92)',
+                background: 'rgba(51,136,255,0.12)',
+                marginBottom: 4,
+              }}
+            >
+              给旅客 · 欢迎与致歉
+            </div>
             <div style={{ fontWeight: 900 }}>致旅客的一封信</div>
             <div className="chek-muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
               欢迎你来潮汕。路上辛苦了；如果遇到不愉快的事，先说声对不起。
             </div>
           </div>
-          <div className="chek-chip gray" style={{ height: 30 }}>
+          <div
+            className="chek-chip gray"
+            style={{
+              height: 34,
+              borderColor: 'rgba(51,136,255,0.16)',
+              background: 'rgba(255,255,255,0.78)',
+              color: 'rgba(20,78,168,0.9)',
+            }}
+          >
+            打开
+          </div>
+        </Link>
+
+        <Link
+          href="/letter/locals"
+          className="chek-card"
+          style={{
+            ...LETTER_CARD_BASE,
+            border: '1px solid rgba(211,119,205,0.2)',
+            background:
+              'linear-gradient(135deg, rgba(232,249,247,0.9), rgba(235,240,255,0.95), rgba(245,233,253,0.9))',
+          }}
+        >
+          <Image src={cat} alt="" width={44} height={44} style={{ borderRadius: 14 }} />
+          <div style={{ minWidth: 0 }}>
+            <div
+              style={{
+                display: 'inline-flex',
+                borderRadius: 999,
+                padding: '2px 8px',
+                fontSize: 11,
+                fontWeight: 800,
+                color: 'rgba(123,58,139,0.95)',
+                background: 'rgba(211,119,205,0.14)',
+                marginBottom: 4,
+              }}
+            >
+              给胶己人 · 共建行动
+            </div>
+            <div style={{ fontWeight: 900 }}>写给胶己人的一封信</div>
+            <div className="chek-muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
+              潮汕的体面，要靠大家一起撑起来。欢迎共建有知相辅，也去社交平台答疑。
+            </div>
+          </div>
+          <div
+            className="chek-chip gray"
+            style={{
+              height: 34,
+              borderColor: 'rgba(211,119,205,0.22)',
+              background: 'rgba(255,255,255,0.82)',
+              color: 'rgba(123,58,139,0.94)',
+            }}
+          >
             打开
           </div>
         </Link>

@@ -6,6 +6,17 @@
 bash /Users/jasonhong/Desktop/CHEK/scripts/dev-up.sh
 ```
 
+如果你想按“更贴近上线”的方式本地联调（使用 MySQL/Redis，而不是默认内存 H2），可以用：
+
+```bash
+CHEK_PRODLIKE=1 bash /Users/jasonhong/Desktop/CHEK/scripts/dev-up.sh
+```
+
+> 说明：
+> - 会用 Docker Compose 启动本地 `mysql:8.0` + `redis:7`（见 `docker-compose.dev.yml`）
+> - 会在各服务目录写入 `.env.local`（如果文件不存在才写入；已在 `.gitignore` 忽略）
+> - MySQL 默认映射到宿主机 `127.0.0.1:3307`（避免和本机已有 MySQL 冲突）
+
 如果前端 Next.js 偶发 500（常见于升级依赖后本地缓存不一致），可用“清缓存启动”：
 
 ```bash

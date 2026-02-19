@@ -2,11 +2,27 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { serverGet } from '@/lib/server-api';
-import type { PostDTO } from '@/lib/api-types';
-import { absoluteUrl, makeDescription, makePageMetadata } from '@/lib/seo';
+import type { GetMediaResponse, PostDTO, PostMediaDTO } from '@/lib/api-types';
+import { absoluteUrl, isBadShareImageUrl, makeDescription, makePageMetadata, normalizeMetaUrl } from '@/lib/seo';
 import { MarkdownBody } from '@/components/MarkdownBody';
 import { MediaGallery } from '@/components/MediaGallery';
 import { CommentsSection } from '@/components/CommentsSection';
+import { formatUserOneIdForDisplay } from '@/lib/user-display';
+
+async function pickFirstImageUrlFromMedia(media: PostMediaDTO[] | null | undefined): Promise<string> {
+  const list = Array.isArray(media) ? media : [];
+  for (const m of list) {
+    const id = Number(m?.mediaObjectId);
+    if (!Number.isFinite(id) || id <= 0) continue;
+    const dto = await serverGet<GetMediaResponse>(`/api/chek-media/v1/media/${id}`, { revalidateSeconds: 300 });
+    const contentType = String(dto?.contentType || '').toLowerCase();
+    if (!contentType.startsWith('image/')) continue;
+    const url = normalizeMetaUrl(dto?.getUrl);
+    if (!url || isBadShareImageUrl(url)) continue;
+    return url;
+  }
+  return '';
+}
 
 export async function generateMetadata({
   params,
@@ -37,17 +53,25 @@ export async function generateMetadata({
   }
 
   const title = post.title?.trim() || '相辅';
+  const shareTitle = post.title?.trim() || '相辅';
   const noindex = !post.isPublic || !post.isIndexable;
+  const shareImageUrl = await pickFirstImageUrlFromMedia(post.media);
+  const shareDescBase = makeDescription(post.body || '', 160);
+  const shareDescription = post.locationName ? `${post.locationName} · ${shareDescBase}` : shareDescBase;
 
   return makePageMetadata({
     title: `${title} - 相辅 | CHEK`,
-    description: makeDescription(post.body || '', 160),
+    description: shareDescBase,
     path: `/p/${post.postId}`,
     ogType: 'article',
     noindex,
     keywords: post.tags || undefined,
     publishedTime: post.createdAt,
     modifiedTime: post.updatedAt || post.createdAt,
+    imageUrl: shareImageUrl || undefined,
+    imageAlt: shareTitle,
+    shareTitle: `${shareTitle} | 潮客 CHEK`,
+    shareDescription,
   });
 }
 
@@ -66,21 +90,30 @@ export default async function PostDetailPage({ params }: { params: Promise<{ pos
   const canonical = absoluteUrl(`/p/${post.postId}`);
   const description = makeDescription(post.body || '', 160);
   const hasGeo = Number.isFinite(post.lat) && Number.isFinite(post.lng);
+  const authorName = formatUserOneIdForDisplay(post.authorUserOneId, '游客');
+  const shareImageUrl = await pickFirstImageUrlFromMedia(post.media);
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
       {
-        '@type': 'Article',
+        '@type': 'DiscussionForumPosting',
         mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
+        url: canonical,
         headline: title,
         description,
+        image: shareImageUrl || undefined,
         datePublished: post.createdAt || undefined,
         dateModified: post.updatedAt || post.createdAt || undefined,
-        author: { '@type': 'Person', name: post.authorUserOneId || '游客' },
+        author: { '@type': 'Person', name: authorName },
         publisher: { '@type': 'Organization', name: 'CHEK' },
         inLanguage: 'zh-CN',
         keywords: post.tags && post.tags.length > 0 ? post.tags.join(', ') : undefined,
+        interactionStatistic: {
+          '@type': 'InteractionCounter',
+          interactionType: { '@type': 'CommentAction' },
+          userInteractionCount: Number(post.commentCount || 0),
+        },
         ...(post.locationName
           ? {
               contentLocation: {
@@ -165,7 +198,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ pos
             <div className="chek-author-row" style={{ margin: 0 }}>
               <div className="chek-avatar" aria-hidden style={{ width: 40, height: 40 }} />
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div className="chek-author-name">{post.authorUserOneId || '游客'}</div>
+                <div className="chek-author-name">{authorName}</div>
                 <div className="chek-author-meta">
                   {post.createdAt ? new Date(post.createdAt).toLocaleString() : '—'}
                   {post.locationName ? ` · ${post.locationName}` : ''}

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { PostDTO } from '@/lib/api-types';
+import { resolveAuthorDisplayName } from '@/lib/user-display';
 
 function snippetFromBody(body: string): string {
   const s = String(body || '')
@@ -39,7 +40,7 @@ export function PostCard({ post }: { post: PostDTO }) {
   const title = post.title?.trim() || '';
   const summary = snippetFromBody(post.body);
   const author = String(post.authorUserOneId || '').trim();
-  const authorLabel = author ? (author.length > 10 ? `胶己·${author.slice(-6)}` : author) : '游客';
+  const authorLabel = resolveAuthorDisplayName(author, '游客');
   const time = formatRelativeTime(post.createdAt || post.updatedAt);
   const meta = [time, post.locationName].filter(Boolean).join(' · ');
   const mediaCount = Array.isArray(post.media) ? post.media.length : 0;

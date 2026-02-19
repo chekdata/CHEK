@@ -1,3 +1,5 @@
+import { clearCurrentUserProfile } from '@/lib/user-display';
+
 const LS_KEY = 'chek.sid_at';
 
 export function getToken(): string {
@@ -20,6 +22,6 @@ export function clearToken() {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.removeItem(LS_KEY);
+    clearCurrentUserProfile();
   } catch {}
 }
-

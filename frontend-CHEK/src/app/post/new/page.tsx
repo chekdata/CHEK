@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import CreatePostClient from './CreatePostClient';
 import { makePageMetadata } from '@/lib/seo';
+import { PageLoading } from '@/components/PageLoading';
 
 export const metadata: Metadata = makePageMetadata({
   title: '发相辅 - CHEK',
@@ -15,16 +16,7 @@ export const metadata: Metadata = makePageMetadata({
 export default function CreatePostPage() {
   return (
     <Suspense
-      fallback={
-        <div className="chek-shell" style={{ paddingBottom: 24 }}>
-          <main className="chek-section">
-            <div className="chek-card" style={{ padding: 16 }}>
-              <div style={{ fontWeight: 900, marginBottom: 8 }}>加载中…</div>
-              <div className="chek-muted">给你添麻烦了，稍等一下。</div>
-            </div>
-          </main>
-        </div>
-      }
+      fallback={<PageLoading title="发相辅准备中" hint="编辑器和上传能力正在加载，请稍等一下。" rows={2} />}
     >
       <CreatePostClient />
     </Suspense>

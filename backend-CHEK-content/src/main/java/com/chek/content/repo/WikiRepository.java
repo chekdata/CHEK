@@ -180,6 +180,23 @@ public class WikiRepository {
     return get(id);
   }
 
+  public WikiEntryDTO update(long entryId, CreateWikiEntryRequest req) {
+    int updated =
+        jdbcTemplate.update(
+            "UPDATE chek_content_wiki_entry SET slug = ?, title = ?, summary = ?, body_md = ?, updated_at = NOW() "
+                + "WHERE id = ?",
+            req.getSlug(),
+            req.getTitle(),
+            req.getSummary(),
+            req.getBody(),
+            entryId);
+    if (updated <= 0) return null;
+
+    jdbcTemplate.update("DELETE FROM chek_content_wiki_entry_tag WHERE entry_id = ?", entryId);
+    upsertEntryTags(entryId, req.getTags());
+    return get(entryId);
+  }
+
   public List<WikiEntryDTO> listPublicForSsg(Instant updatedAfter, Long cursor, int limit) {
     int n = Math.max(1, Math.min(limit, 200));
     long cur = cursor == null ? 0L : cursor;

@@ -40,6 +40,7 @@ export async function GET(request: Request) {
   const urls: Array<{ loc: string; lastmod?: string }> = [];
   urls.push({ loc: `${site}/wiki` });
   urls.push({ loc: `${site}/letter` });
+  urls.push({ loc: `${site}/letter/locals` });
 
   for (const e of wiki) {
     if (!e?.isPublic || !e?.isIndexable) continue;

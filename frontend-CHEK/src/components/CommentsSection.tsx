@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 import type { CommentDTO } from '@/lib/api-types';
 import { clientFetch } from '@/lib/client-api';
 import { getToken } from '@/lib/token';
+import { resolveAuthorDisplayName } from '@/lib/user-display';
+import { SkeletonBlock, SkeletonLines } from '@/components/Skeleton';
 
 function formatTime(ts?: string): string {
   if (!ts) return '—';
@@ -84,7 +86,18 @@ export function CommentsSection({ postId }: { postId: number }) {
 
       <div style={{ display: 'grid', gap: 10 }}>
         {loading ? (
-          <div className="chek-muted">加载评论中…</div>
+          Array.from({ length: 3 }).map((_, index) => (
+            <div key={`skeleton-${index}`} className="chek-card" style={{ padding: 12, borderRadius: 20 }}>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <SkeletonBlock width={32} height={32} radius={999} style={{ marginTop: 2 }} />
+                <div style={{ minWidth: 0, flex: 1, display: 'grid', gap: 8 }}>
+                  <SkeletonBlock width="42%" height={12} />
+                  <SkeletonLines lines={2} widths={['92%', '76%']} />
+                </div>
+                <SkeletonBlock width={46} height={30} radius={999} />
+              </div>
+            </div>
+          ))
         ) : list.length > 0 ? (
           list.map((c) => (
             <div key={c.commentId} className="chek-card" style={{ padding: 12, borderRadius: 20 }}>
@@ -92,7 +105,7 @@ export function CommentsSection({ postId }: { postId: number }) {
                 <div className="chek-avatar" aria-hidden style={{ width: 32, height: 32, marginTop: 2 }} />
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div className="chek-muted" style={{ fontSize: 12, fontWeight: 800 }}>
-                    {c.authorUserOneId || '游客'} · {formatTime(c.createdAt)}
+                    {resolveAuthorDisplayName(c.authorUserOneId, '游客')} · {formatTime(c.createdAt)}
                   </div>
                   <div style={{ marginTop: 6, lineHeight: 1.7, fontSize: 14, whiteSpace: 'pre-wrap' }}>{c.body}</div>
                 </div>

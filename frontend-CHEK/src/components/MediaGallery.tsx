@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { GetMediaResponse, PostMediaDTO } from '@/lib/api-types';
 import { clientFetch } from '@/lib/client-api';
+import { SkeletonBlock } from '@/components/Skeleton';
 
 type MediaView = {
   mediaObjectId: number;
@@ -61,9 +62,7 @@ export function MediaGallery({ media }: { media?: PostMediaDTO[] }) {
         {views.map((v) => (
           <div key={v.mediaObjectId} className="chek-card" style={{ padding: 6, borderRadius: 18 }}>
             {v.loading ? (
-              <div className="chek-muted" style={{ padding: 10 }}>
-                加载中…
-              </div>
+              <SkeletonBlock width="100%" height="100%" radius={12} style={{ aspectRatio: '1 / 1' }} />
             ) : v.error ? (
               <div className="chek-muted" style={{ padding: 10 }}>
                 {v.error}

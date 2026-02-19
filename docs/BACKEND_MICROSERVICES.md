@@ -31,7 +31,7 @@ P1（可选）：
 
 - **有知（Wiki）**
   - 词条读取（公开、可索引）
-  - 词条创建/编辑（MVP 可先做“管理员/贡献者”写入；不做复杂工作流）
+  - 词条创建/编辑（MVP 先做“登录即共建”，不做复杂工作流）
   - 标签与聚合页（供前端与 SEO/SSG 使用）
 - **相辅（Forum）**
   - 发帖/删帖/下架（MVP：发帖 + 评论）
@@ -86,6 +86,8 @@ Wiki（公开读取；写入需鉴权）：
 
 - `GET /v1/wiki/entries?query&tags&cursor`
 - `GET /v1/wiki/entries/bySlug/{slug}`
+- `POST /v1/wiki/entries`（登录用户可创建）
+- `PUT /v1/wiki/entries/{id}`（登录用户可编辑）
 
 Post（公开读取可选；写入需鉴权）：
 
@@ -211,4 +213,4 @@ API（建议，P1）：
 - `chek-content` 负责：
   - 写接口必须登录
   - 删除/下架：作者或管理员
-  - Wiki 写入：MVP 可先只给管理员/白名单贡献者
+  - Wiki 写入：MVP 先开放登录用户共建（后续再加审核流）

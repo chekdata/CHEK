@@ -5,6 +5,50 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG_DIR="$ROOT_DIR/.logs"
 mkdir -p "$LOG_DIR"
 
+if [[ "${CHEK_PRODLIKE:-}" == "1" ]]; then
+  bash "$ROOT_DIR/scripts/dev-db-up.sh"
+  bash "$ROOT_DIR/scripts/dev-write-env-local.sh"
+fi
+
+load_env_file() {
+  local file="$1"
+  if [[ ! -f "$file" ]]; then
+    return 0
+  fi
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    local s="$line"
+    s="${s#"${s%%[![:space:]]*}"}"
+    s="${s%"${s##*[![:space:]]}"}"
+    if [[ -z "$s" || "$s" == \#* ]]; then
+      continue
+    fi
+    if [[ "$s" != *"="* ]]; then
+      continue
+    fi
+
+    local k="${s%%=*}"
+    local v="${s#*=}"
+    k="${k#"${k%%[![:space:]]*}"}"
+    k="${k%"${k##*[![:space:]]}"}"
+    v="${v#"${v%%[![:space:]]*}"}"
+    v="${v%"${v##*[![:space:]]}"}"
+
+    if [[ -z "$k" ]]; then
+      continue
+    fi
+    if [[ ! "$k" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+      continue
+    fi
+
+    if [[ ( "$v" == \"*\" && "$v" == *\" ) || ( "$v" == \'*\' && "$v" == *\' ) ]]; then
+      v="${v:1:${#v}-2}"
+    fi
+
+    export "$k=$v"
+  done <"$file"
+}
+
 port_pid() {
   local port="$1"
   lsof -nP -iTCP:"$port" -sTCP:LISTEN -t 2>/dev/null || true
@@ -26,10 +70,7 @@ start_mvn_service() {
   (
     cd "$ROOT_DIR/$dir"
     if [[ -f ".env.local" ]]; then
-      set -a
-      # shellcheck disable=SC1091
-      source ".env.local"
-      set +a
+      load_env_file ".env.local"
     fi
     nohup mvn -q spring-boot:run >"$LOG_DIR/$name.log" 2>&1 &
     echo $! >"$LOG_DIR/$name.pid"

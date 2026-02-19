@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import WeChatCallbackClient from './WeChatCallbackClient';
 import { makePageMetadata } from '@/lib/seo';
+import { PageLoading } from '@/components/PageLoading';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = makePageMetadata({
@@ -23,16 +24,7 @@ export default function WeChatCallbackPage() {
 
   return (
     <Suspense
-      fallback={
-        <div className="chek-shell" style={{ paddingBottom: 24 }}>
-          <main className="chek-section">
-            <div className="chek-card" style={{ padding: 16 }}>
-              <div style={{ fontWeight: 900, marginBottom: 8 }}>加载中…</div>
-              <div className="chek-muted">给你添麻烦了，稍等一下。</div>
-            </div>
-          </main>
-        </div>
-      }
+      fallback={<PageLoading title="微信登录处理中" hint="正在校验授权状态并准备跳转。" rows={1} />}
     >
       <WeChatCallbackClient
         wechatAppId={wechatAppId}
