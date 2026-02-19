@@ -30,6 +30,28 @@ OpenAPI：`https://api-dev.chekkk.com/api/auth/openapi.json`
 
 - `Authorization: Bearer <sid_at>`
 
+## 2.1 微信 H5 网页授权登录（推荐）
+
+目标：前端只负责“拉起微信授权拿 code + 把 code 交给 auth-saas 换 token”，**AppSecret 始终只放在后端**。
+
+流程（简化版）：
+
+1) 前端在登录页引导用户跳转微信 OAuth（带 `appid/redirect_uri/scope/state`）  
+2) 微信回调到你的 H5（例如 `https://chaoshan.chekkk.com/auth/wechat/callback`），带 `code/state`  
+3) 前端调用 auth-saas：`POST /api/auth/v1/wechat/login`，body 传 `clientId + code`  
+4) auth-saas 返回 `accessToken`（sid_at）。前端保存后即可调用业务服务
+
+注意：
+
+- `redirect_uri` 必须 URL 编码，且域名需在微信后台配置为“网页授权回调域名”。
+- 若返回里 `mobilePhone` 为空：跳转绑定手机号页，调用 `POST /api/auth/v1/user/wechat/bindPhone` 补全。
+
+前端配置（Next.js H5）：
+
+- `NEXT_PUBLIC_WECHAT_APP_ID`：微信 AppID（公开可见）
+- `NEXT_PUBLIC_WECHAT_SCOPE`：微信内常用 `snsapi_base/snsapi_userinfo`（默认 `snsapi_userinfo`）
+- `NEXT_PUBLIC_AUTH_CLIENT_ID`：auth-saas clientId（默认 `app`）
+
 ## 3. 网关鉴权（双通行证）
 
 业务服务不直接依赖 auth-saas 内省接口；由网关统一做：

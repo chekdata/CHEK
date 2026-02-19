@@ -6,12 +6,20 @@
 bash /Users/jasonhong/Desktop/CHEK/scripts/dev-up.sh
 ```
 
+如果前端 Next.js 偶发 500（常见于升级依赖后本地缓存不一致），可用“清缓存启动”：
+
+```bash
+CHEK_CLEAN_NEXT_CACHE=1 bash /Users/jasonhong/Desktop/CHEK/scripts/dev-up.sh
+```
+
 启动后访问：
 
 - H5：`http://localhost:3000`
 - Dev Gateway：`http://localhost:8787`
 
 > Dev Gateway 的作用：在本地模拟网关最关键能力，把 `/api/<svc>/...` 路由到本地微服务端口，并用 `Authorization: Bearer <sid_at>` 去 auth-saas 拉 `userInfo`，把 `userOneId` 注入成 `X-User-One-Id`，这样本地也能跑通“发相辅/评论”等写接口。
+>
+> 微信 H5 网页授权登录通常无法在 `localhost` 联调（回调域名白名单限制）。本地建议先用“手机号验证码登录”；微信登录用线上域名再验收。
 
 关闭：
 

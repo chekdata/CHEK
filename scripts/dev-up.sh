@@ -76,6 +76,11 @@ EOF
   echo "[frontend] wrote frontend-CHEK/.env.local"
 fi
 
+if [[ "${CHEK_CLEAN_NEXT_CACHE:-}" == "1" ]]; then
+  echo "[frontend] cleaning frontend-CHEK/.next (CHEK_CLEAN_NEXT_CACHE=1)"
+  rm -r "$ROOT_DIR/frontend-CHEK/.next" 2>/dev/null || true
+fi
+
 start_node_service "frontend-chek" "frontend-CHEK" 3000 npm run dev
 
 echo ""

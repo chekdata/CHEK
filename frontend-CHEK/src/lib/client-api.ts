@@ -46,5 +46,10 @@ export async function clientFetch<T>(
     return env.data;
   }
 
+  //兼容部分网关/服务返回：{ code: "SUCCESS", message: "成功", data: {...} }
+  if (json && typeof json === 'object' && json?.code === 'SUCCESS' && 'data' in json) {
+    return json.data as T;
+  }
+
   return json as T;
 }

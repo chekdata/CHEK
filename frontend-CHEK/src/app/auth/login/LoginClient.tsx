@@ -6,6 +6,13 @@ import { useMemo, useState } from 'react';
 import { clientFetch } from '@/lib/client-api';
 import { setToken } from '@/lib/token';
 import { markWelcomePendingIfFirstLogin } from '@/lib/welcome';
+import {
+  buildWechatOAuthUrl,
+  isWeChatBrowser,
+  sanitizeNext,
+  storeWechatOauthAttempt,
+  withPublicBasePath,
+} from '@/lib/wechat-oauth';
 
 export default function LoginClient() {
   const router = useRouter();
@@ -17,6 +24,18 @@ export default function LoginClient() {
   const [sending, setSending] = useState(false);
   const [loggingIn, setLoggingIn] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+
+  function wechatLogin() {
+    const appId = String(process.env.NEXT_PUBLIC_WECHAT_APP_ID || '').trim();
+    if (!appId) {
+      setMsg('暂未配置微信 AppID：请先设置 NEXT_PUBLIC_WECHAT_APP_ID。');
+      return;
+    }
+    const s = storeWechatOauthAttempt(sanitizeNext(next));
+    const redirectUri = `${window.location.origin}${withPublicBasePath('/auth/wechat/callback')}`;
+    const url = buildWechatOAuthUrl({ appId, redirectUri, state: s });
+    window.location.href = url;
+  }
 
   async function sendSms() {
     const p = phone.trim();
@@ -80,6 +99,22 @@ export default function LoginClient() {
         </div>
 
         <div className="chek-card" style={{ padding: 16, display: 'grid', gap: 10 }}>
+          <div style={{ fontWeight: 900 }}>微信登录（推荐）</div>
+          <div className="chek-muted" style={{ lineHeight: 1.7 }}>
+            {isWeChatBrowser()
+              ? '在微信里打开可直接授权登录。'
+              : '不在微信环境：会走微信开放平台扫码登录（更适合电脑端）。'}
+          </div>
+          <button
+            className="chek-chip"
+            style={{ border: 'none', cursor: 'pointer', justifyContent: 'center' }}
+            onClick={wechatLogin}
+          >
+            微信登录
+          </button>
+        </div>
+
+        <div className="chek-card" style={{ padding: 16, display: 'grid', gap: 10 }}>
           <div style={{ fontWeight: 900 }}>手机号验证码登录</div>
 
           <input
@@ -138,13 +173,6 @@ export default function LoginClient() {
         </div>
 
         <div className="chek-card" style={{ padding: 16 }}>
-          <div style={{ fontWeight: 900, marginBottom: 8 }}>微信一键登录（可选）</div>
-          <div className="chek-muted" style={{ lineHeight: 1.7 }}>
-            MVP 先打通手机号登录；微信登录后续接入 auth-saas 的 `/api/auth/v1/wechat/login`。
-          </div>
-        </div>
-
-        <div className="chek-card" style={{ padding: 16 }}>
           <div className="chek-muted" style={{ lineHeight: 1.7 }}>
             继续即表示你同意
             <Link href="/legal" style={{ color: 'var(--chek-primary)', fontWeight: 900, marginLeft: 6 }}>
@@ -157,4 +185,3 @@ export default function LoginClient() {
     </div>
   );
 }
-
