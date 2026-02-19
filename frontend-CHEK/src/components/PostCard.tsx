@@ -11,6 +11,7 @@ import { getToken } from '@/lib/token';
 import { absoluteUrl, shareLink } from '@/lib/share';
 import { highlightText } from '@/lib/highlight';
 import { resolveAuthorDisplayName } from '@/lib/user-display';
+import { UserAvatar } from '@/components/UserAvatar';
 
 function snippetFromBody(body: string): string {
   const s = String(body || '')
@@ -36,14 +37,6 @@ function formatRelativeTime(ts?: string): string {
   const day = Math.floor(hr / 24);
   if (day < 7) return `${day}天前`;
   return d.toLocaleDateString();
-}
-
-function avatarColor(seed: string): string {
-  const s = String(seed || '');
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-  const palette = ['rgba(51,136,255,0.18)', 'rgba(70,235,213,0.18)', 'rgba(211,119,205,0.16)', 'rgba(0,0,0,0.08)'];
-  return palette[h % palette.length]!;
 }
 
 type MediaPreview = {
@@ -203,7 +196,7 @@ export function PostCard({ post, highlightQuery }: { post: PostDTO; highlightQue
     <article className="chek-card chek-post-card" style={{ display: 'block' }}>
       <Link href={`/p/${post.postId}`} style={{ display: 'block', color: 'inherit', textDecoration: 'none' }}>
         <div className="chek-author-row">
-          <div className="chek-avatar" style={{ background: avatarColor(author) }} aria-hidden />
+          <UserAvatar userOneId={author} label={authorLabel} size={36} />
           <div style={{ minWidth: 0 }}>
             <div className="chek-author-name">{authorLabel}</div>
             <div className="chek-author-meta">{meta || '—'}</div>

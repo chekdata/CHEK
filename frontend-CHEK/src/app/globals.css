@@ -232,6 +232,10 @@ a {
   border: 2px solid rgba(255, 255, 255, 0.85);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
   flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .chek-author-name {
