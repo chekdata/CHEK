@@ -14,16 +14,10 @@ type MediaView = {
 
 export function MediaGallery({ media }: { media?: PostMediaDTO[] }) {
   const list = Array.isArray(media) ? media : [];
-  const [views, setViews] = useState<MediaView[]>(
-    list.map((m) => ({
-      mediaObjectId: m.mediaObjectId,
-      kind: m.kind,
-      url: '',
-      loading: true,
-    }))
-  );
+  const [views, setViews] = useState<MediaView[]>([]);
 
   useEffect(() => {
+    const list = Array.isArray(media) ? media : [];
     let canceled = false;
     async function run() {
       const next: MediaView[] = [];
@@ -57,7 +51,7 @@ export function MediaGallery({ media }: { media?: PostMediaDTO[] }) {
     return () => {
       canceled = true;
     };
-  }, [list.map((m) => m.mediaObjectId).join(',')]);
+  }, [media]);
 
   if (list.length === 0) return null;
 
@@ -86,4 +80,3 @@ export function MediaGallery({ media }: { media?: PostMediaDTO[] }) {
     </section>
   );
 }
-
