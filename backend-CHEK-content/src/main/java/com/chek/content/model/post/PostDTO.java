@@ -1,5 +1,6 @@
 package com.chek.content.model.post;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
 import java.util.List;
 
@@ -100,18 +101,22 @@ public class PostDTO {
     this.authorUserOneId = authorUserOneId;
   }
 
+  @JsonProperty("isPublic")
   public boolean isPublic() {
     return isPublic;
   }
 
+  @JsonProperty("isPublic")
   public void setPublic(boolean aPublic) {
     isPublic = aPublic;
   }
 
+  @JsonProperty("isIndexable")
   public boolean isIndexable() {
     return isIndexable;
   }
 
+  @JsonProperty("isIndexable")
   public void setIndexable(boolean indexable) {
     isIndexable = indexable;
   }
