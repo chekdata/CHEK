@@ -4,10 +4,13 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { UnifiedTagPicker } from '@/components/UnifiedTagPicker';
+import { MarkdownPreview } from '@/components/MarkdownPreview';
+import { UserAvatar } from '@/components/UserAvatar';
 import { clientFetch } from '@/lib/client-api';
 import { getToken } from '@/lib/token';
 import { COMMON_TOPIC_TAGS, escapeTagRegex, extractHashtags, mergeUniqueTags, normalizeTag } from '@/lib/tags';
 import type { PresignUploadResponse, PostDTO } from '@/lib/api-types';
+import { readCurrentUserProfile, resolveDisplayName } from '@/lib/user-display';
 
 type UploadItem = {
   id: string;
@@ -22,6 +25,16 @@ type UploadItem = {
 
 const TAG_LIMIT = 10;
 const MEDIA_LIMIT = 9;
+const DRAFT_KEY = 'chek.post_draft.v1';
+
+type PostDraft = {
+  v: 1;
+  title: string;
+  body: string;
+  locationName: string;
+  occurredAt: string;
+  savedAt: number;
+};
 
 function findDraftTag(text: string, cursor: number): { start: number; end: number; query: string } | null {
   const safeCursor = Math.max(0, Math.min(cursor, text.length));
@@ -72,6 +85,9 @@ export default function CreatePostClient() {
   const [showTagPicker, setShowTagPicker] = useState(false);
   const [tagPickerFromHash, setTagPickerFromHash] = useState(false);
   const [bodyCursor, setBodyCursor] = useState(0);
+  const [preview, setPreview] = useState(false);
+  const [draftSavedAt, setDraftSavedAt] = useState<number>(0);
+  const [draftRestored, setDraftRestored] = useState(false);
 
   const selectedTags = useMemo(() => extractHashtags(body).slice(0, TAG_LIMIT), [body]);
   const pendingUploadCount = useMemo(
@@ -99,6 +115,57 @@ export default function CreatePostClient() {
   }, [uploads]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = window.localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Partial<PostDraft>;
+      if (!parsed || parsed.v !== 1) return;
+      const nextTitle = String(parsed.title || '');
+      const nextBody = String(parsed.body || '');
+      const nextLocation = String(parsed.locationName || '');
+      const nextOccurred = String(parsed.occurredAt || '');
+      if (!nextTitle.trim() && !nextBody.trim() && !nextLocation.trim() && !nextOccurred.trim()) return;
+      setTitle(nextTitle);
+      setBody(nextBody);
+      setLocationName(nextLocation);
+      setOccurredAt(nextOccurred);
+      setDraftSavedAt(Number(parsed.savedAt || 0));
+      setDraftRestored(true);
+      window.setTimeout(() => setDraftRestored(false), 1600);
+    } catch {
+      // ignore bad drafts
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const hasAny = Boolean(title.trim() || body.trim() || locationName.trim() || occurredAt.trim());
+    const t = window.setTimeout(() => {
+      try {
+        if (!hasAny) {
+          window.localStorage.removeItem(DRAFT_KEY);
+          setDraftSavedAt(0);
+          return;
+        }
+        const payload: PostDraft = {
+          v: 1,
+          title,
+          body,
+          locationName,
+          occurredAt,
+          savedAt: Date.now(),
+        };
+        window.localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+        setDraftSavedAt(payload.savedAt);
+      } catch {
+        // ignore quota errors
+      }
+    }, 600);
+    return () => window.clearTimeout(t);
+  }, [title, body, locationName, occurredAt]);
+
+  useEffect(() => {
     return () => {
       for (const item of uploadsRef.current) {
         try {
@@ -107,6 +174,19 @@ export default function CreatePostClient() {
       }
     };
   }, []);
+
+  function clearDraft(options?: { keepUploads?: boolean }) {
+    try {
+      window.localStorage.removeItem(DRAFT_KEY);
+    } catch {}
+    setDraftSavedAt(0);
+    setTitle('');
+    setBody('');
+    setLocationName('');
+    setOccurredAt('');
+    setMsg(null);
+    if (!options?.keepUploads) clearUploads();
+  }
 
   function syncTagDraft(text: string, cursor: number) {
     const draft = findDraftTag(text, cursor);
@@ -380,6 +460,7 @@ export default function CreatePostClient() {
           media,
         }),
       });
+      clearDraft({ keepUploads: true });
       router.replace(`/p/${created.postId}`);
     } catch (e: any) {
       setMsg(e?.message || '发布失败了，真诚抱歉。你可以再试一次。');
@@ -418,92 +499,218 @@ export default function CreatePostClient() {
         ) : null}
 
         <div className="chek-card" style={{ padding: 16, display: 'grid', gap: 10 }}>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="标题（可选）"
-            style={{
-              borderRadius: 14,
-              border: '1px solid rgba(0,0,0,0.08)',
-              padding: 12,
-              outline: 'none',
-              background: 'rgba(255,255,255,0.85)',
-              fontWeight: 800,
-            }}
-          />
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                type="button"
+                className={!preview ? 'chek-chip' : 'chek-chip gray'}
+                style={{ border: 'none', cursor: 'pointer' }}
+                onClick={() => setPreview(false)}
+              >
+                编辑
+              </button>
+              <button
+                type="button"
+                className={preview ? 'chek-chip' : 'chek-chip gray'}
+                style={{ border: 'none', cursor: 'pointer' }}
+                onClick={() => setPreview(true)}
+              >
+                预览
+              </button>
+              {draftRestored ? (
+                <div className="chek-muted" style={{ fontSize: 12, fontWeight: 800, alignSelf: 'center' }}>
+                  已恢复草稿
+                </div>
+              ) : null}
+            </div>
 
-          <textarea
-            ref={bodyRef}
-            value={body}
-            onChange={(e) => {
-              const next = e.target.value;
-              const cursor = e.target.selectionStart ?? next.length;
-              setBody(next);
-              setBodyCursor(cursor);
-              syncTagDraft(next, cursor);
-            }}
-            onSelect={(e) => {
-              const target = e.currentTarget;
-              const cursor = target.selectionStart ?? target.value.length;
-              setBodyCursor(cursor);
-              syncTagDraft(target.value, cursor);
-            }}
-            placeholder="正文（必填）：说清时间地点、发生了什么、你希望大家怎么帮你…"
-            rows={8}
-            style={{
-              borderRadius: 14,
-              border: '1px solid rgba(0,0,0,0.08)',
-              padding: 12,
-              outline: 'none',
-              background: 'rgba(255,255,255,0.85)',
-              resize: 'vertical',
-              lineHeight: 1.7,
-            }}
-          />
-
-          <div style={{ display: 'grid', gap: 10 }}>
-            <UnifiedTagPicker
-              title="话题"
-              selectedTags={selectedTags}
-              limit={TAG_LIMIT}
-              query={tagQuery}
-              suggestions={tagSuggestions}
-              open={showTagPicker}
-              onOpenChange={(open) => {
-                setShowTagPicker(open);
-                setTagPickerFromHash(false);
-                if (!open) setTagQuery('');
-              }}
-              onQueryChange={setTagQuery}
-              onAddTag={addTagToBody}
-              onRemoveTag={removeTagFromBody}
-              autoHint="像小红书一样，正文里输入 # 就会弹出话题推荐。"
-            />
-            <input
-              value={locationName}
-              onChange={(e) => setLocationName(e.target.value)}
-              placeholder="地点（可选）：牌坊街/汕头站…"
-              style={{
-                borderRadius: 14,
-                border: '1px solid rgba(0,0,0,0.08)',
-                padding: 12,
-                outline: 'none',
-                background: 'rgba(255,255,255,0.85)',
-              }}
-            />
-            <input
-              value={occurredAt}
-              onChange={(e) => setOccurredAt(e.target.value)}
-              type="datetime-local"
-              style={{
-                borderRadius: 14,
-                border: '1px solid rgba(0,0,0,0.08)',
-                padding: 12,
-                outline: 'none',
-                background: 'rgba(255,255,255,0.85)',
-              }}
-            />
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              {draftSavedAt ? (
+                <div className="chek-muted" style={{ fontSize: 12 }}>
+                  草稿已保存 · {new Date(draftSavedAt).toLocaleTimeString()}
+                </div>
+              ) : null}
+              <button
+                type="button"
+                className="chek-chip gray"
+                style={{ border: 'none', cursor: 'pointer' }}
+                onClick={() => clearDraft()}
+              >
+                清空草稿
+              </button>
+            </div>
           </div>
+
+          {preview ? (
+            <div style={{ display: 'grid', gap: 12 }}>
+              <div className="chek-card" style={{ padding: 14, borderRadius: 20 }}>
+                <div className="chek-author-row" style={{ marginBottom: 10 }}>
+                  <UserAvatar
+                    userOneId={readCurrentUserProfile()?.userOneId}
+                    label={resolveDisplayName(readCurrentUserProfile(), '你')}
+                    size={36}
+                  />
+                  <div style={{ minWidth: 0 }}>
+                    <div className="chek-author-name">{resolveDisplayName(readCurrentUserProfile(), '你')}</div>
+                    <div className="chek-author-meta">
+                      {locationName.trim() ? locationName.trim() : '—'}
+                      {occurredAt ? ` · ${new Date(occurredAt).toLocaleString()}` : ''}
+                    </div>
+                  </div>
+                </div>
+
+                {title.trim() ? (
+                  <div style={{ fontWeight: 900, fontSize: 18, lineHeight: 1.3, marginBottom: 10 }}>{title.trim()}</div>
+                ) : null}
+
+                {selectedTags.length > 0 ? (
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                    {selectedTags.map((t) => (
+                      <span key={t} className="chek-chip gray" style={{ padding: '6px 10px' }}>
+                        #{t}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+
+                {uploads.length > 0 ? (
+                  <div
+                    aria-label="媒体预览"
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, 1fr)',
+                      gap: 8,
+                      marginBottom: 10,
+                    }}
+                  >
+                    {uploads.slice(0, 6).map((u) =>
+                      u.kind === 'VIDEO' ? (
+                        <div
+                          key={u.id}
+                          style={{
+                            borderRadius: 16,
+                            background: 'rgba(0,0,0,0.06)',
+                            aspectRatio: '1 / 1',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 900,
+                            color: 'rgba(0,0,0,0.55)',
+                          }}
+                        >
+                          视频
+                        </div>
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          key={u.id}
+                          src={u.localUrl}
+                          alt=""
+                          style={{ width: '100%', borderRadius: 16, aspectRatio: '1 / 1', objectFit: 'cover' }}
+                        />
+                      )
+                    )}
+                  </div>
+                ) : null}
+
+                <MarkdownPreview body={body || ''} />
+              </div>
+              <div className="chek-muted" style={{ fontSize: 12, lineHeight: 1.7 }}>
+                预览仅供参考；未上传的媒体不会随草稿保存。
+              </div>
+            </div>
+          ) : null}
+
+          {!preview ? (
+            <>
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="标题（可选）"
+                style={{
+                  borderRadius: 14,
+                  border: '1px solid rgba(0,0,0,0.08)',
+                  padding: 12,
+                  outline: 'none',
+                  background: 'rgba(255,255,255,0.85)',
+                  fontWeight: 800,
+                }}
+              />
+
+              <textarea
+                ref={bodyRef}
+                value={body}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  const cursor = e.target.selectionStart ?? next.length;
+                  setBody(next);
+                  setBodyCursor(cursor);
+                  syncTagDraft(next, cursor);
+                }}
+                onSelect={(e) => {
+                  const target = e.currentTarget;
+                  const cursor = target.selectionStart ?? target.value.length;
+                  setBodyCursor(cursor);
+                  syncTagDraft(target.value, cursor);
+                }}
+                placeholder="正文（必填）：说清时间地点、发生了什么、你希望大家怎么帮你…"
+                rows={8}
+                style={{
+                  borderRadius: 14,
+                  border: '1px solid rgba(0,0,0,0.08)',
+                  padding: 12,
+                  outline: 'none',
+                  background: 'rgba(255,255,255,0.85)',
+                  resize: 'vertical',
+                  lineHeight: 1.7,
+                }}
+              />
+
+              <div style={{ display: 'grid', gap: 10 }}>
+                <UnifiedTagPicker
+                  title="话题"
+                  selectedTags={selectedTags}
+                  limit={TAG_LIMIT}
+                  query={tagQuery}
+                  suggestions={tagSuggestions}
+                  open={showTagPicker}
+                  onOpenChange={(open) => {
+                    setShowTagPicker(open);
+                    setTagPickerFromHash(false);
+                    if (!open) setTagQuery('');
+                  }}
+                  onQueryChange={setTagQuery}
+                  onAddTag={addTagToBody}
+                  onRemoveTag={removeTagFromBody}
+                  autoHint="像小红书一样，正文里输入 # 就会弹出话题推荐。"
+                />
+                <input
+                  value={locationName}
+                  onChange={(e) => setLocationName(e.target.value)}
+                  placeholder="地点（可选）：牌坊街/汕头站…"
+                  style={{
+                    borderRadius: 14,
+                    border: '1px solid rgba(0,0,0,0.08)',
+                    padding: 12,
+                    outline: 'none',
+                    background: 'rgba(255,255,255,0.85)',
+                  }}
+                />
+                <input
+                  value={occurredAt}
+                  onChange={(e) => setOccurredAt(e.target.value)}
+                  type="datetime-local"
+                  style={{
+                    borderRadius: 14,
+                    border: '1px solid rgba(0,0,0,0.08)',
+                    padding: 12,
+                    outline: 'none',
+                    background: 'rgba(255,255,255,0.85)',
+                  }}
+                />
+              </div>
+            </>
+          ) : null}
         </div>
 
         <div className="chek-card" style={{ padding: 16 }}>

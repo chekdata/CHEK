@@ -8,8 +8,8 @@ import { MarkdownBody } from '@/components/MarkdownBody';
 import { MediaGallery } from '@/components/MediaGallery';
 import { CommentsSection } from '@/components/CommentsSection';
 import { formatUserOneIdForDisplay } from '@/lib/user-display';
-import { FollowButton } from '@/components/FollowButton';
 import { ShareIconButton } from '@/components/ShareIconButton';
+import { PostAuthorRow } from '@/components/PostAuthorRow';
 
 async function pickFirstImageUrlFromMedia(media: PostMediaDTO[] | null | undefined): Promise<string> {
   const list = Array.isArray(media) ? media : [];
@@ -191,17 +191,12 @@ export default async function PostDetailPage({ params }: { params: Promise<{ pos
       <main className="chek-section" style={{ paddingTop: 12 }}>
         <article className="chek-card" style={{ padding: 18, borderRadius: 28 }}>
           <header style={{ display: 'grid', gap: 12 }}>
-            <div className="chek-author-row" style={{ margin: 0 }}>
-              <div className="chek-avatar" aria-hidden style={{ width: 40, height: 40 }} />
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <div className="chek-author-name">{authorName}</div>
-                <div className="chek-author-meta">
-                  {post.createdAt ? new Date(post.createdAt).toLocaleString() : '—'}
-                  {post.locationName ? ` · ${post.locationName}` : ''}
-                </div>
-              </div>
-              <FollowButton targetUserOneId={post.authorUserOneId} nextPath={`/p/${post.postId}`} />
-            </div>
+            <PostAuthorRow
+              authorUserOneId={post.authorUserOneId}
+              createdAt={post.createdAt}
+              locationName={post.locationName}
+              nextPath={`/p/${post.postId}`}
+            />
 
             <h1 style={{ margin: 0, fontWeight: 900, fontSize: 20, lineHeight: 1.25 }}>{uiTitle}</h1>
 

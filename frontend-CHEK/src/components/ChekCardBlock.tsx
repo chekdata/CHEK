@@ -1,3 +1,5 @@
+'use client';
+
 type ChekCardItem = { label: string; value: string };
 
 export function ChekCardBlock(props: { title?: string; items?: ChekCardItem[] }) {
@@ -38,4 +40,3 @@ export function ChekCardBlock(props: { title?: string; items?: ChekCardItem[] })
     </section>
   );
 }
-
