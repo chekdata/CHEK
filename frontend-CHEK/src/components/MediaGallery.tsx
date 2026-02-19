@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { GetMediaResponse, PostMediaDTO } from '@/lib/api-types';
 import { clientFetch } from '@/lib/client-api';
 
@@ -13,7 +13,8 @@ type MediaView = {
 };
 
 export function MediaGallery({ media }: { media?: PostMediaDTO[] }) {
-  const list = Array.isArray(media) ? media : [];
+  const list = useMemo(() => (Array.isArray(media) ? media : []), [media]);
+  const mediaKey = useMemo(() => list.map((m) => m.mediaObjectId).join(','), [list]);
   const [views, setViews] = useState<MediaView[]>(
     list.map((m) => ({
       mediaObjectId: m.mediaObjectId,
@@ -57,7 +58,7 @@ export function MediaGallery({ media }: { media?: PostMediaDTO[] }) {
     return () => {
       canceled = true;
     };
-  }, [list.map((m) => m.mediaObjectId).join(',')]);
+  }, [list, mediaKey]);
 
   if (list.length === 0) return null;
 
@@ -86,4 +87,3 @@ export function MediaGallery({ media }: { media?: PostMediaDTO[] }) {
     </section>
   );
 }
-
