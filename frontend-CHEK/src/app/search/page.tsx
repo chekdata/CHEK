@@ -1,10 +1,20 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { serverGet } from '@/lib/server-api';
 import type { PostDTO, WikiEntryDTO } from '@/lib/api-types';
+import { makePageMetadata } from '@/lib/seo';
 import { PostCard } from '@/components/PostCard';
 import { WikiCard } from '@/components/WikiCard';
 
 export const revalidate = 0;
+export const metadata: Metadata = makePageMetadata({
+  title: '搜索 - CHEK',
+  description: '搜索有知与相辅内容。',
+  path: '/search',
+  ogType: 'website',
+  noindex: true,
+  keywords: ['搜索', '潮汕', 'CHEK'],
+});
 
 export default async function SearchPage({
   searchParams,

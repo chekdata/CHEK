@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { serverGet } from '@/lib/server-api';
 import type { PostDTO } from '@/lib/api-types';
+import { absoluteUrl, makeDescription, makePageMetadata } from '@/lib/seo';
 import { MarkdownBody } from '@/components/MarkdownBody';
 import { MediaGallery } from '@/components/MediaGallery';
 import { CommentsSection } from '@/components/CommentsSection';
@@ -14,14 +15,40 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { postId } = await params;
   const id = Number(postId);
-  if (!Number.isFinite(id) || id <= 0) return { title: '相辅 - CHEK' };
+  if (!Number.isFinite(id) || id <= 0) {
+    return makePageMetadata({
+      title: '相辅 - CHEK',
+      description: '相辅：分享潮汕旅行经验、避坑与评论。',
+      path: '/feed',
+      ogType: 'website',
+      noindex: true,
+    });
+  }
+
   const post = await serverGet<PostDTO>(`/api/chek-content/v1/posts/${id}`, { revalidateSeconds: 30 });
-  if (!post) return { title: '相辅 - CHEK' };
+  if (!post) {
+    return makePageMetadata({
+      title: '相辅 - CHEK',
+      description: '相辅：分享潮汕旅行经验、避坑与评论。',
+      path: '/feed',
+      ogType: 'website',
+      noindex: true,
+    });
+  }
+
   const title = post.title?.trim() || '相辅';
-  return {
+  const noindex = !post.isPublic || !post.isIndexable;
+
+  return makePageMetadata({
     title: `${title} - 相辅 | CHEK`,
-    description: (post.body || '').slice(0, 120),
-  };
+    description: makeDescription(post.body || '', 160),
+    path: `/p/${post.postId}`,
+    ogType: 'article',
+    noindex,
+    keywords: post.tags || undefined,
+    publishedTime: post.createdAt,
+    modifiedTime: post.updatedAt || post.createdAt,
+  });
 }
 
 export default async function PostDetailPage({ params }: { params: Promise<{ postId: string }> }) {
@@ -31,14 +58,47 @@ export default async function PostDetailPage({ params }: { params: Promise<{ pos
 
   const post = await serverGet<PostDTO>(`/api/chek-content/v1/posts/${id}`, { revalidateSeconds: 30 });
   if (!post) notFound();
+  if (!post.isPublic) notFound();
+
+  const rawTitle = post.title?.trim() || '';
+  const title = rawTitle || '相辅';
+  const uiTitle = rawTitle || '无标题';
+  const canonical = absoluteUrl(`/p/${post.postId}`);
+  const description = makeDescription(post.body || '', 160);
+  const hasGeo = Number.isFinite(post.lat) && Number.isFinite(post.lng);
 
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: post.title?.trim() || '相辅',
-    datePublished: post.createdAt || undefined,
-    dateModified: post.updatedAt || undefined,
-    author: { '@type': 'Person', name: post.authorUserOneId },
+    '@graph': [
+      {
+        '@type': 'Article',
+        mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
+        headline: title,
+        description,
+        datePublished: post.createdAt || undefined,
+        dateModified: post.updatedAt || post.createdAt || undefined,
+        author: { '@type': 'Person', name: post.authorUserOneId || '游客' },
+        publisher: { '@type': 'Organization', name: 'CHEK' },
+        inLanguage: 'zh-CN',
+        keywords: post.tags && post.tags.length > 0 ? post.tags.join(', ') : undefined,
+        ...(post.locationName
+          ? {
+              contentLocation: {
+                '@type': 'Place',
+                name: post.locationName,
+                ...(hasGeo ? { geo: { '@type': 'GeoCoordinates', latitude: post.lat, longitude: post.lng } } : null),
+              },
+            }
+          : null),
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: '相辅', item: absoluteUrl('/feed') },
+          { '@type': 'ListItem', position: 2, name: title, item: canonical },
+        ],
+      },
+    ],
   };
 
   return (
@@ -121,9 +181,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ pos
               </button>
             </div>
 
-            <div style={{ fontWeight: 900, fontSize: 20, lineHeight: 1.25 }}>
-              {post.title?.trim() || '无标题'}
-            </div>
+            <h1 style={{ margin: 0, fontWeight: 900, fontSize: 20, lineHeight: 1.25 }}>{uiTitle}</h1>
 
             {post.tags && post.tags.length > 0 ? (
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

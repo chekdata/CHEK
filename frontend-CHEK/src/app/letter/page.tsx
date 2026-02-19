@@ -2,18 +2,37 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import cat from '@assets/IP/空状态-通用.png';
+import { absoluteUrl, makePageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = makePageMetadata({
   title: '致旅客的一封信 - CHEK',
   description: '欢迎你来潮汕。路上辛苦了。如果遇到不愉快的事，先说声对不起，给你添麻烦了。',
-};
+  path: '/letter',
+  ogType: 'website',
+  keywords: ['潮汕', '旅行', '避坑', 'CHEK'],
+});
 
 export default function LetterPage() {
+  const canonical = absoluteUrl('/letter');
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'WebPage',
-    name: '致旅客的一封信',
-    inLanguage: 'zh-CN',
+    '@graph': [
+      {
+        '@type': 'WebPage',
+        '@id': canonical,
+        url: canonical,
+        name: '致旅客的一封信',
+        description: '欢迎你来潮汕。路上辛苦了。如果遇到不愉快的事，先说声对不起，给你添麻烦了。',
+        inLanguage: 'zh-CN',
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: '相辅', item: absoluteUrl('/feed') },
+          { '@type': 'ListItem', position: 2, name: '致旅客的一封信', item: canonical },
+        ],
+      },
+    ],
   };
 
   return (
@@ -119,4 +138,3 @@ export default function LetterPage() {
     </div>
   );
 }
-

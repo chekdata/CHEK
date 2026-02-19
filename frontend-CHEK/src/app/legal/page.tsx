@@ -1,4 +1,15 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
+import { makePageMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = makePageMetadata({
+  title: '协议与免责声明 - CHEK',
+  description: '协议与免责声明：信息来源、隐私与安全、社区氛围。',
+  path: '/legal',
+  ogType: 'website',
+  noindex: true,
+  keywords: ['免责声明', '协议', 'CHEK'],
+});
 
 export default function LegalPage() {
   return (
@@ -39,4 +50,3 @@ export default function LegalPage() {
     </div>
   );
 }
-

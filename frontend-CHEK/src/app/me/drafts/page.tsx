@@ -1,4 +1,15 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
+import { makePageMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = makePageMetadata({
+  title: '草稿箱 - CHEK',
+  description: '草稿箱（占位）。',
+  path: '/me/drafts',
+  ogType: 'website',
+  noindex: true,
+  keywords: ['草稿箱', 'CHEK'],
+});
 
 export default function DraftsPage() {
   return (
@@ -33,4 +44,3 @@ export default function DraftsPage() {
     </div>
   );
 }
-

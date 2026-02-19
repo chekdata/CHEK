@@ -1,7 +1,17 @@
 import { Suspense } from 'react';
+import type { Metadata } from 'next';
 import WeChatCallbackClient from './WeChatCallbackClient';
+import { makePageMetadata } from '@/lib/seo';
 
 export const dynamic = 'force-dynamic';
+export const metadata: Metadata = makePageMetadata({
+  title: '微信登录回调 - CHEK',
+  description: '正在处理微信登录回调。',
+  path: '/auth/wechat/callback',
+  ogType: 'website',
+  noindex: true,
+  keywords: ['微信登录', 'CHEK'],
+});
 
 export default function WeChatCallbackPage() {
   const wechatAppId = String(process.env.CHEK_WECHAT_APP_ID || process.env.NEXT_PUBLIC_WECHAT_APP_ID || '').trim();

@@ -1,9 +1,18 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { serverGet } from '@/lib/server-api';
 import { WikiEntryDTO } from '@/lib/api-types';
+import { makePageMetadata } from '@/lib/seo';
 import { WikiCard } from '@/components/WikiCard';
 
 export const revalidate = 60;
+export const metadata: Metadata = makePageMetadata({
+  title: '有知 - CHEK',
+  description: '有知：潮汕旅行百科与要点整理。',
+  path: '/wiki',
+  ogType: 'website',
+  keywords: ['潮汕', '百科', '路线', '避坑', 'CHEK'],
+});
 
 export default async function WikiIndexPage() {
   const entries =
@@ -70,4 +79,3 @@ export default async function WikiIndexPage() {
     </>
   );
 }
-

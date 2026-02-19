@@ -1,4 +1,15 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
+import { makePageMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = makePageMetadata({
+  title: '我的收藏 - CHEK',
+  description: '我的收藏（占位）。',
+  path: '/me/favorites',
+  ogType: 'website',
+  noindex: true,
+  keywords: ['收藏', 'CHEK'],
+});
 
 export default function FavoritesPage() {
   return (
@@ -33,4 +44,3 @@ export default function FavoritesPage() {
     </div>
   );
 }
-

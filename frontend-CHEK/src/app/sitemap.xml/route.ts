@@ -38,23 +38,26 @@ export async function GET(request: Request) {
   ]);
 
   const urls: Array<{ loc: string; lastmod?: string }> = [];
-  urls.push({ loc: `${site}/feed` });
   urls.push({ loc: `${site}/wiki` });
   urls.push({ loc: `${site}/letter` });
 
   for (const e of wiki) {
+    if (!e?.isPublic || !e?.isIndexable) continue;
+    if (!e?.slug) continue;
     urls.push({
       loc: `${site}/wiki/${encodeURIComponent(e.slug)}`,
       lastmod: e.updatedAt || e.publishedAt || e.createdAt || undefined,
     });
   }
   for (const p of posts) {
+    if (!p?.isPublic || !p?.isIndexable) continue;
     urls.push({
       loc: `${site}/p/${p.postId}`,
       lastmod: p.updatedAt || p.createdAt || undefined,
     });
   }
   for (const t of tags) {
+    if (!t?.name) continue;
     urls.push({
       loc: `${site}/tag/${encodeURIComponent(t.name)}`,
       lastmod: t.createdAt || undefined,

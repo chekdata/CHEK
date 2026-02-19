@@ -1,15 +1,56 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { serverGet } from '@/lib/server-api';
 import type { PostDTO, WikiEntryDTO } from '@/lib/api-types';
+import { absoluteUrl, makePageMetadata } from '@/lib/seo';
 import { WikiCard } from '@/components/WikiCard';
 import { PostCard } from '@/components/PostCard';
 
 export const revalidate = 120;
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ tag: string }>;
+}): Promise<Metadata> {
+  const { tag: rawTag } = await params;
+  const tag = decodeURIComponent(rawTag || '').trim();
+  const safeTag = tag || '标签';
+
+  return makePageMetadata({
+    title: `#${safeTag} - 标签 | CHEK`,
+    description: `查看 #${safeTag} 下的有知词条与相辅帖子。`,
+    path: `/tag/${encodeURIComponent(safeTag)}`,
+    ogType: 'website',
+    keywords: [safeTag, '潮汕', 'CHEK'],
+  });
+}
+
 export default async function TagPage({ params }: { params: Promise<{ tag: string }> }) {
   const { tag: rawTag } = await params;
   const tag = decodeURIComponent(rawTag || '').trim();
   const safeTag = tag || '标签';
+
+  const canonical = absoluteUrl(`/tag/${encodeURIComponent(safeTag)}`);
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'CollectionPage',
+        mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
+        name: `#${safeTag}`,
+        description: `查看 #${safeTag} 下的有知词条与相辅帖子。`,
+        inLanguage: 'zh-CN',
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: '相辅', item: absoluteUrl('/feed') },
+          { '@type': 'ListItem', position: 2, name: `#${safeTag}`, item: canonical },
+        ],
+      },
+    ],
+  };
 
   const wiki =
     (await serverGet<WikiEntryDTO[]>(
@@ -69,6 +110,12 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
           </div>
         </section>
       </main>
+
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
     </div>
   );
 }

@@ -1,4 +1,15 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
+import { makePageMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = makePageMetadata({
+  title: '辣辣嗦 - CHEK',
+  description: '辣辣嗦：把内容落到地图上，帮你更直观地看“在哪儿、怎么走”。（建设中）',
+  path: '/map',
+  ogType: 'website',
+  noindex: true,
+  keywords: ['地图', '潮汕', 'CHEK'],
+});
 
 export default function MapPage() {
   return (
@@ -33,4 +44,3 @@ export default function MapPage() {
     </div>
   );
 }
-

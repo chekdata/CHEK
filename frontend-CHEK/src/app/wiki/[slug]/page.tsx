@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { serverGet } from '@/lib/server-api';
 import type { PostDTO, WikiEntryDTO } from '@/lib/api-types';
+import { absoluteUrl, makeDescription, makePageMetadata } from '@/lib/seo';
 import { MarkdownBody } from '@/components/MarkdownBody';
 import { PostCard } from '@/components/PostCard';
 
@@ -16,11 +17,29 @@ export async function generateMetadata({
   const entry = await serverGet<WikiEntryDTO>(`/api/chek-content/v1/wiki/entries/bySlug/${encodeURIComponent(slug)}`, {
     revalidateSeconds: 120,
   });
-  if (!entry) return { title: '有知 - CHEK' };
-  return {
+  if (!entry) {
+    return makePageMetadata({
+      title: '有知 - CHEK',
+      description: '有知：潮汕旅行百科与要点整理。',
+      path: '/wiki',
+      ogType: 'website',
+      noindex: true,
+    });
+  }
+
+  const noindex = !entry.isPublic || !entry.isIndexable;
+  const description = makeDescription(entry.summary || entry.body || '', 160);
+
+  return makePageMetadata({
     title: `${entry.title} - 有知 | CHEK`,
-    description: entry.summary || (entry.body || '').slice(0, 120),
-  };
+    description,
+    path: `/wiki/${encodeURIComponent(entry.slug)}`,
+    ogType: 'article',
+    noindex,
+    keywords: entry.tags || undefined,
+    publishedTime: entry.publishedAt || entry.createdAt,
+    modifiedTime: entry.updatedAt || entry.publishedAt || entry.createdAt,
+  });
 }
 
 export default async function WikiDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -32,26 +51,46 @@ export default async function WikiDetailPage({ params }: { params: Promise<{ slu
     { revalidateSeconds: 120 }
   );
   if (!entry) notFound();
+  if (!entry.isPublic) notFound();
 
   const tag = entry.tags && entry.tags.length > 0 ? entry.tags[0] : '';
   const qs = tag ? `?tags=${encodeURIComponent(tag)}&limit=10` : '?limit=10';
   const relatedPosts =
     (await serverGet<PostDTO[]>(`/api/chek-content/v1/posts${qs}`, { revalidateSeconds: 60 })) || [];
 
+  const canonical = absoluteUrl(`/wiki/${encodeURIComponent(entry.slug)}`);
+  const description = makeDescription(entry.summary || entry.body || '', 160);
+
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: entry.title,
-    datePublished: entry.publishedAt || entry.createdAt || undefined,
-    dateModified: entry.updatedAt || undefined,
-    author: { '@type': 'Organization', name: 'CHEK' },
+    '@graph': [
+      {
+        '@type': 'Article',
+        mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
+        headline: entry.title,
+        description,
+        datePublished: entry.publishedAt || entry.createdAt || undefined,
+        dateModified: entry.updatedAt || entry.publishedAt || entry.createdAt || undefined,
+        author: { '@type': 'Organization', name: 'CHEK' },
+        publisher: { '@type': 'Organization', name: 'CHEK' },
+        inLanguage: 'zh-CN',
+        keywords: entry.tags && entry.tags.length > 0 ? entry.tags.join(', ') : undefined,
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: '有知', item: absoluteUrl('/wiki') },
+          { '@type': 'ListItem', position: 2, name: entry.title, item: canonical },
+        ],
+      },
+    ],
   };
 
   return (
     <div className="chek-shell" style={{ paddingBottom: 24 }}>
       <header className="chek-header">
         <div className="chek-title-row">
-          <h1 className="chek-title">有知详情</h1>
+          <h1 className="chek-title">{entry.title}</h1>
           <Link href="/wiki" className="chek-chip gray">
             返回
           </Link>
@@ -61,7 +100,6 @@ export default async function WikiDetailPage({ params }: { params: Promise<{ slu
       <main className="chek-section" style={{ display: 'grid', gap: 12 }}>
         <article className="chek-card" style={{ padding: 16 }}>
           <header style={{ display: 'grid', gap: 8 }}>
-            <div style={{ fontWeight: 900, fontSize: 20, lineHeight: 1.3 }}>{entry.title}</div>
             {entry.tags && entry.tags.length > 0 ? (
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {entry.tags.map((t) => (

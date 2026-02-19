@@ -1,5 +1,16 @@
 import { Suspense } from 'react';
+import type { Metadata } from 'next';
 import CreatePostClient from './CreatePostClient';
+import { makePageMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = makePageMetadata({
+  title: '发相辅 - CHEK',
+  description: '发一条相辅，把经历讲出来，帮后来的人少走弯路。',
+  path: '/post/new',
+  ogType: 'website',
+  noindex: true,
+  keywords: ['发帖', '相辅', '潮汕', 'CHEK'],
+});
 
 export default function CreatePostPage() {
   return (
@@ -19,4 +30,3 @@ export default function CreatePostPage() {
     </Suspense>
   );
 }
-

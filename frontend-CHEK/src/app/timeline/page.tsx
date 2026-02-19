@@ -1,4 +1,15 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
+import { makePageMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = makePageMetadata({
+  title: '劳热 - CHEK',
+  description: '劳热：把带时间的信息串成时间线，方便你快速看脉络。（建设中）',
+  path: '/timeline',
+  ogType: 'website',
+  noindex: true,
+  keywords: ['时间线', '潮汕', 'CHEK'],
+});
 
 export default function TimelinePage() {
   return (
@@ -33,4 +44,3 @@ export default function TimelinePage() {
     </div>
   );
 }
-

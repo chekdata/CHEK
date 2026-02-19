@@ -1,4 +1,15 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
+import { makePageMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = makePageMetadata({
+  title: 'AI来 - CHEK',
+  description: 'AI来：把回答做成“有依据、有引用”。（建设中）',
+  path: '/ai',
+  ogType: 'website',
+  noindex: true,
+  keywords: ['AI', '潮汕', 'CHEK'],
+});
 
 export default function AiPage() {
   return (
@@ -33,4 +44,3 @@ export default function AiPage() {
     </>
   );
 }
-

@@ -1,13 +1,23 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import type { Metadata } from 'next';
 import { serverGet } from '@/lib/server-api';
 import { PostDTO } from '@/lib/api-types';
+import { makePageMetadata } from '@/lib/seo';
 import { PostCard } from '@/components/PostCard';
 import cat from '@assets/IP/空状态-通用.png';
 import emptyNoPosts from '@assets/IP/没有帖子.png';
 import { WelcomeModal } from '@/components/WelcomeModal';
 
 export const revalidate = 30;
+export const metadata: Metadata = makePageMetadata({
+  title: '相辅 - CHEK',
+  description: '相辅：分享潮汕旅行经验、避坑与评论。',
+  path: '/feed',
+  ogType: 'website',
+  noindex: true,
+  keywords: ['潮汕', '避坑', '旅行', '相辅', 'CHEK'],
+});
 
 const HEADER_CHIPS: Array<{ label: string; href: string; active?: boolean }> = [
   { label: '# 全部', href: '/feed', active: true },

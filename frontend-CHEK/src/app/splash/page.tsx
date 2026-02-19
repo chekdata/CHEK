@@ -1,7 +1,18 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import logo from '@assets/LOGO.png';
 import cat from '@assets/IP/空状态-通用.png';
+import { makePageMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = makePageMetadata({
+  title: '潮客 CHEK',
+  description: '一起把潮汕讲清楚。欢迎你来潮汕，路上辛苦了。',
+  path: '/splash',
+  ogType: 'website',
+  noindex: true,
+  keywords: ['潮汕', '旅行', 'CHEK'],
+});
 
 export default function SplashPage() {
   return (
@@ -38,4 +49,3 @@ export default function SplashPage() {
     </div>
   );
 }
-
