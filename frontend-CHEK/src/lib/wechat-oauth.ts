@@ -68,7 +68,12 @@ export function consumeWechatOauthAttempt(stateFromQuery: string | null): { ok: 
   }
 }
 
-export function buildWechatOAuthUrl(args: { appId: string; redirectUri: string; state: string }): string {
+export function buildWechatOAuthUrl(args: {
+  appId: string;
+  redirectUri: string;
+  state: string;
+  scopeInWechat?: string;
+}): string {
   const appId = String(args.appId || '').trim();
   if (!appId) throw new Error('未配置微信 AppID');
 
@@ -79,7 +84,7 @@ export function buildWechatOAuthUrl(args: { appId: string; redirectUri: string; 
   if (!state) throw new Error('缺少 state');
 
   if (isWeChatBrowser()) {
-    const scope = String(process.env.NEXT_PUBLIC_WECHAT_SCOPE || '').trim() || 'snsapi_userinfo';
+    const scope = String(args.scopeInWechat || '').trim() || 'snsapi_userinfo';
     return (
       `https://open.weixin.qq.com/connect/oauth2/authorize` +
       `?appid=${encodeURIComponent(appId)}` +

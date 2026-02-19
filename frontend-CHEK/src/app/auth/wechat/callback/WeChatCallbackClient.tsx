@@ -6,22 +6,26 @@ import { useEffect, useMemo, useState } from 'react';
 import { clientFetch } from '@/lib/client-api';
 import { setToken } from '@/lib/token';
 import { markWelcomePendingIfFirstLogin } from '@/lib/welcome';
-import { consumeWechatOauthAttempt, sanitizeNext, storeWechatOauthAttempt, withPublicBasePath, buildWechatOAuthUrl } from '@/lib/wechat-oauth';
+import {
+  buildWechatOAuthUrl,
+  consumeWechatOauthAttempt,
+  sanitizeNext,
+  storeWechatOauthAttempt,
+  withPublicBasePath,
+} from '@/lib/wechat-oauth';
 
 type WechatLoginDTO = {
   accessToken?: string;
   mobilePhone?: string;
 };
 
-function getAuthClientId(): string {
-  return String(process.env.NEXT_PUBLIC_AUTH_CLIENT_ID || '').trim() || 'app';
-}
+type WeChatCallbackClientProps = {
+  wechatAppId?: string;
+  wechatScope?: string;
+  authClientId?: string;
+};
 
-function getWechatAppId(): string {
-  return String(process.env.NEXT_PUBLIC_WECHAT_APP_ID || '').trim();
-}
-
-export default function WeChatCallbackClient() {
+export default function WeChatCallbackClient(props: WeChatCallbackClientProps) {
   const router = useRouter();
   const sp = useSearchParams();
 
@@ -49,11 +53,12 @@ export default function WeChatCallbackClient() {
       }
 
       try {
+        const clientId = String(props.authClientId || '').trim() || 'app';
         const dto = await clientFetch<WechatLoginDTO>('/api/auth/v1/wechat/login', {
           method: 'POST',
           body: JSON.stringify({
             code,
-            clientId: getAuthClientId(),
+            clientId,
             scene: 'chek_h5',
           }),
         });
@@ -89,15 +94,15 @@ export default function WeChatCallbackClient() {
   }, [code, router, state]);
 
   function retryWechatLogin() {
-    const appId = getWechatAppId();
+    const appId = String(props.wechatAppId || '').trim();
     if (!appId) {
-      setMsg('未配置微信 AppID：请先在环境变量里设置 NEXT_PUBLIC_WECHAT_APP_ID。');
+      setMsg('未配置微信 AppID：请先配置 CHEK_WECHAT_APP_ID（或 NEXT_PUBLIC_WECHAT_APP_ID）。');
       return;
     }
-    const next = sanitizeNext(sp.get('next') || '/feed');
+    const next = sanitizeNext('/feed');
     const s = storeWechatOauthAttempt(next);
     const redirectUri = `${window.location.origin}${withPublicBasePath('/auth/wechat/callback')}`;
-    const url = buildWechatOAuthUrl({ appId, redirectUri, state: s });
+    const url = buildWechatOAuthUrl({ appId, redirectUri, state: s, scopeInWechat: props.wechatScope });
     window.location.href = url;
   }
 
@@ -141,4 +146,3 @@ export default function WeChatCallbackClient() {
     </div>
   );
 }
-

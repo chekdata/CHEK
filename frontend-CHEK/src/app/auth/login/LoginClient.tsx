@@ -14,7 +14,13 @@ import {
   withPublicBasePath,
 } from '@/lib/wechat-oauth';
 
-export default function LoginClient() {
+type LoginClientProps = {
+  wechatAppId?: string;
+  wechatScope?: string;
+  authClientId?: string;
+};
+
+export default function LoginClient(props: LoginClientProps) {
   const router = useRouter();
   const sp = useSearchParams();
   const next = useMemo(() => sp.get('next') || '/feed', [sp]);
@@ -26,14 +32,19 @@ export default function LoginClient() {
   const [msg, setMsg] = useState<string | null>(null);
 
   function wechatLogin() {
-    const appId = String(process.env.NEXT_PUBLIC_WECHAT_APP_ID || '').trim();
+    const appId = String(props.wechatAppId || '').trim();
     if (!appId) {
-      setMsg('暂未配置微信 AppID：请先设置 NEXT_PUBLIC_WECHAT_APP_ID。');
+      setMsg('暂未配置微信 AppID：请先配置 CHEK_WECHAT_APP_ID（或 NEXT_PUBLIC_WECHAT_APP_ID）。');
       return;
     }
     const s = storeWechatOauthAttempt(sanitizeNext(next));
     const redirectUri = `${window.location.origin}${withPublicBasePath('/auth/wechat/callback')}`;
-    const url = buildWechatOAuthUrl({ appId, redirectUri, state: s });
+    const url = buildWechatOAuthUrl({
+      appId,
+      redirectUri,
+      state: s,
+      scopeInWechat: props.wechatScope,
+    });
     window.location.href = url;
   }
 
@@ -62,9 +73,10 @@ export default function LoginClient() {
     setMsg(null);
     setLoggingIn(true);
     try {
+      const clientId = String(props.authClientId || '').trim() || 'app';
       const dto = await clientFetch<any>('/api/auth/v1/accounts/smsLogin', {
         method: 'POST',
-        body: JSON.stringify({ mobilePhone: p, code: c, clientId: 'app' }),
+        body: JSON.stringify({ mobilePhone: p, code: c, clientId }),
       });
       const token = dto?.accessToken || dto?.AccessToken || dto?.token || '';
       if (!token) throw new Error('登录返回缺少 accessToken');

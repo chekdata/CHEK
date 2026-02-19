@@ -1,7 +1,13 @@
 import { Suspense } from 'react';
 import WeChatCallbackClient from './WeChatCallbackClient';
 
+export const dynamic = 'force-dynamic';
+
 export default function WeChatCallbackPage() {
+  const wechatAppId = String(process.env.CHEK_WECHAT_APP_ID || process.env.NEXT_PUBLIC_WECHAT_APP_ID || '').trim();
+  const wechatScope = String(process.env.CHEK_WECHAT_SCOPE || process.env.NEXT_PUBLIC_WECHAT_SCOPE || '').trim() || 'snsapi_userinfo';
+  const authClientId = String(process.env.CHEK_AUTH_CLIENT_ID || process.env.NEXT_PUBLIC_AUTH_CLIENT_ID || '').trim() || 'app';
+
   return (
     <Suspense
       fallback={
@@ -15,8 +21,7 @@ export default function WeChatCallbackPage() {
         </div>
       }
     >
-      <WeChatCallbackClient />
+      <WeChatCallbackClient wechatAppId={wechatAppId} wechatScope={wechatScope} authClientId={authClientId} />
     </Suspense>
   );
 }
-

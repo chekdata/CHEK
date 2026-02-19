@@ -48,9 +48,14 @@ OpenAPI：`https://api-dev.chekkk.com/api/auth/openapi.json`
 
 前端配置（Next.js H5）：
 
-- `NEXT_PUBLIC_WECHAT_APP_ID`：微信 AppID（公开可见）
-- `NEXT_PUBLIC_WECHAT_SCOPE`：微信内常用 `snsapi_base/snsapi_userinfo`（默认 `snsapi_userinfo`）
-- `NEXT_PUBLIC_AUTH_CLIENT_ID`：auth-saas clientId（默认 `app`）
+- 推荐（运行时配置，无需重新打前端镜像）：
+  - `CHEK_WECHAT_APP_ID`：微信 AppID（公开可见）
+  - `CHEK_WECHAT_SCOPE`：微信内常用 `snsapi_base/snsapi_userinfo`（默认 `snsapi_userinfo`）
+  - `CHEK_AUTH_CLIENT_ID`：auth-saas clientId（默认 `app`）
+- 备选（构建期内联到前端 JS；修改需重建/重发版）：
+  - `NEXT_PUBLIC_WECHAT_APP_ID`
+  - `NEXT_PUBLIC_WECHAT_SCOPE`
+  - `NEXT_PUBLIC_AUTH_CLIENT_ID`
 
 ## 3. 网关鉴权（双通行证）
 
