@@ -27,8 +27,10 @@ async function paginate<T extends { [k: string]: any }>(path: string, idKey: str
   return out;
 }
 
-export async function GET() {
-  const site = getSiteUrl();
+export const dynamic = 'force-dynamic';
+
+export async function GET(request: Request) {
+  const site = getSiteUrl(request);
   const [wiki, posts, tags] = await Promise.all([
     paginate<WikiEntryDTO>('/api/chek-content/v1/public/ssg/wiki', 'entryId'),
     paginate<PostDTO>('/api/chek-content/v1/public/ssg/posts', 'postId'),
