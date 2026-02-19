@@ -25,8 +25,19 @@
   - `python ./skills/chek-vibe-cobuild/scripts/seed_scrape_chek.py --wiki-count 120 --post-count 120 --out-dir ./.logs/seed/<batch>`
 - Import seed files to content service:
   - `python ./skills/chek-vibe-cobuild/scripts/import_seed_chek.py --content-base-url http://localhost:8081 --wiki-jsonl <wiki.jsonl> --posts-jsonl <posts.jsonl>`
+  - Multi-author posts (for follow testing): `--user-one-ids seed-a,seed-b,seed-c`
 - Import through gateway:
   - `python ./skills/chek-vibe-cobuild/scripts/import_seed_chek.py --via-gateway --content-base-url https://api-dev.chekkk.com --authorization-file <sid_at_file> --wiki-jsonl <wiki.jsonl> --posts-jsonl <posts.jsonl>`
+
+## Smoke tests
+
+- Post-deploy smoke test (prod):
+  - `CHEK_SID_AT='<sid_at>' python ./skills/chek-vibe-cobuild/scripts/smoke_chek_content_social.py --api-base https://api.chekkk.com`
+
+## Frontend checks
+
+- Local automated checks:
+  - `bash ./skills/chek-vibe-cobuild/scripts/frontend-check.sh`
 
 ## Skill distribution
 

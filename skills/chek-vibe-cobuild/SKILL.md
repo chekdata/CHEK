@@ -58,7 +58,31 @@ python ./skills/chek-vibe-cobuild/scripts/import_seed_chek.py \
   --posts-jsonl ./.logs/seed/<batch>/posts.jsonl
 ```
 
-### 4) Shutdown
+Tip (recommended tags for 相辅 seed): `寄宿家庭` / `接送站` / `求助` / `投诉`
+Tip (multi-author posts for follow testing): add `--user-one-ids seed-a,seed-b,seed-c`
+
+### 4) Post-deploy smoke tests (prod/staging)
+
+After backend-chek-content is deployed, run deterministic smoke tests for the new social endpoints (likes/favorites/follows):
+
+```bash
+CHEK_SID_AT='<sid_at>' python ./skills/chek-vibe-cobuild/scripts/smoke_chek_content_social.py --api-base https://api.chekkk.com
+```
+
+Notes:
+
+- The script checks `openapi.json` first; if the new paths/fields are missing, it fails fast.
+- It toggles like/favorite/follow once, then restores the original state (best-effort).
+
+### 5) Frontend local automated checks
+
+Run:
+
+```bash
+bash ./skills/chek-vibe-cobuild/scripts/frontend-check.sh
+```
+
+### 6) Shutdown
 
 Run:
 
@@ -67,7 +91,7 @@ bash ./skills/chek-vibe-cobuild/scripts/dev-down.sh
 bash ./skills/chek-vibe-cobuild/scripts/dev-db-down.sh
 ```
 
-### 5) Sync skill to global Codex
+### 7) Sync skill to global Codex
 
 Run:
 

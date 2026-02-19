@@ -192,6 +192,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("--skip-wiki", action="store_true", help="Skip importing wiki entries")
     ap.add_argument("--skip-posts", action="store_true", help="Skip importing posts")
     ap.add_argument("--user-one-id", default="seed-bot", help="X-User-One-Id for posts (default: seed-bot)")
+    ap.add_argument(
+        "--user-one-ids",
+        default="",
+        help="Optional comma-separated X-User-One-Id list for posts (round-robin). Overrides --user-one-id.",
+    )
     ap.add_argument("--rpm", type=int, default=30, help="Rate limit requests per minute (default: 30)")
     ap.add_argument("--limit", type=int, default=0, help="Import only first N rows of each file (0=all)")
     ap.add_argument("--fail-fast", action="store_true", help="Stop on first failure")
@@ -230,6 +235,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     wiki_stats = ImportStats()
     post_stats = ImportStats()
 
+    user_one_ids: List[str] = []
+    if args.user_one_ids:
+        user_one_ids = [s.strip() for s in str(args.user_one_ids).split(",") if s.strip()]
+    if not user_one_ids:
+        user_one_ids = [str(args.user_one_id)]
+
     def iter_limited(rows: Iterable[Dict[str, Any]]) -> Iterable[Dict[str, Any]]:
         if not args.limit or args.limit <= 0:
             yield from rows
@@ -244,8 +255,6 @@ def main(argv: Optional[List[str]] = None) -> int:
     wiki_path_prefix = "/api/chek-content" if args.via_gateway else ""
     gateway_headers: Dict[str, str] = {}
     if args.via_gateway and args.gateway_pass_through_identity:
-        if args.user_one_id:
-            gateway_headers["X-User-One-Id"] = str(args.user_one_id)
         gateway_headers["X-Is-Admin"] = "true"
     # Wiki
     if not args.skip_wiki and wiki_path is not None:
@@ -285,6 +294,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     # Posts
     if not args.skip_posts and posts_path is not None:
         for idx, row in enumerate(iter_limited(read_jsonl(posts_path)), start=1):
+            user_one_id = user_one_ids[(idx - 1) % len(user_one_ids)]
             payload = {
                 k: row.get(k)
                 for k in [
@@ -299,10 +309,13 @@ def main(argv: Optional[List[str]] = None) -> int:
                 ]
             }
             if args.via_gateway:
+                post_headers = dict(gateway_headers)
+                if args.gateway_pass_through_identity:
+                    post_headers["X-User-One-Id"] = user_one_id
                 status, data, raw = importer._post_json(  # noqa: SLF001 (script)
                     f"{wiki_path_prefix}/v1/posts",
                     payload,
-                    headers=gateway_headers,
+                    headers=post_headers,
                 )
                 if status == 0:
                     ok = False
@@ -319,7 +332,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 else:
                     ok, msg = True, "ok"
             else:
-                ok, msg = importer.create_post(payload, user_one_id=str(args.user_one_id))
+                ok, msg = importer.create_post(payload, user_one_id=user_one_id)
             if ok:
                 post_stats.ok += 1
             else:
