@@ -122,6 +122,6 @@ python ./skills/chek-vibe-cobuild/scripts/import_seed_chek.py \
 3. 提交前至少通过目标模块的 lint/build/test
 4. PR 描述写清楚：变更范围、回归点、截图或日志
 
-## Thanks to all clawtributors:
+## Thanks to all contributors:
 
 [![Contributors](https://contrib.rocks/image?repo=chekdata/CHEK)](https://github.com/chekdata/CHEK/graphs/contributors)
