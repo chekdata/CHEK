@@ -13,6 +13,9 @@
 .vpn
 **/.vpn
 
+.tmp
+**/.tmp
+
 .local
 **/.local
 
