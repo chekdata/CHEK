@@ -225,18 +225,24 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
+      - name: Set up Docker Buildx
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: docker/setup-buildx-action@v3
+
       - name: Build & push image (prod tag only)
         if: startsWith(github.ref, 'refs/tags/v')
-        working-directory: backend-CHEK-crawler
         env:
           IMAGE: ${{ env.REGISTRY }}/prod/backend-chek-crawler
           TAG: ${{ github.ref_name }}
-        run: |
-          set -euo pipefail
-          docker build -t "$IMAGE:$TAG" .
-          docker push "$IMAGE:$TAG"
-          docker tag "$IMAGE:$TAG" "$IMAGE:prod"
-          docker push "$IMAGE:prod"
+        uses: docker/build-push-action@v6
+        with:
+          context: backend-CHEK-crawler
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/prod/backend-chek-crawler:${{ github.ref_name }}
+            ${{ env.REGISTRY }}/prod/backend-chek-crawler:prod
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Dispatch GitOps bump (prod tag only)
         if: startsWith(github.ref, 'refs/tags/v')
