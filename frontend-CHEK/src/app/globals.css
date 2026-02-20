@@ -1,3 +1,6 @@
+@import '@uppy/core/dist/style.min.css';
+@import '@uppy/dashboard/dist/style.min.css';
+
 :root {
   --chek-primary: #3388ff;
   --chek-secondary: #46ebd5;

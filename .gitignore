@@ -10,6 +10,9 @@
 .logs
 **/.logs
 
+.vpn
+**/.vpn
+
 .env
 .env.*
 !.env.example

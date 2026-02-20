@@ -3,6 +3,10 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Uppy from '@uppy/core';
+import AwsS3 from '@uppy/aws-s3';
+import { Dashboard } from '@uppy/react';
+import zhCN from '@uppy/locales/lib/zh_CN';
 import { UnifiedTagPicker } from '@/components/UnifiedTagPicker';
 import { MarkdownPreview } from '@/components/MarkdownPreview';
 import { UserAvatar } from '@/components/UserAvatar';
@@ -11,17 +15,6 @@ import { getToken } from '@/lib/token';
 import { COMMON_TOPIC_TAGS, escapeTagRegex, extractHashtags, mergeUniqueTags, normalizeTag } from '@/lib/tags';
 import type { PresignUploadResponse, PostDTO } from '@/lib/api-types';
 import { readCurrentUserProfile, resolveDisplayName } from '@/lib/user-display';
-
-type UploadItem = {
-  id: string;
-  file: File;
-  localUrl: string;
-  mediaObjectId: number;
-  kind: 'IMAGE' | 'VIDEO';
-  filename: string;
-  state: 'selected' | 'uploading' | 'uploaded' | 'failed';
-  error?: string;
-};
 
 const TAG_LIMIT = 10;
 const MEDIA_LIMIT = 9;
@@ -55,10 +48,10 @@ function findDraftTag(text: string, cursor: number): { start: number; end: numbe
   };
 }
 
-function createUploadId(file: File): string {
-  const cryptoObj = typeof window !== 'undefined' ? window.crypto : undefined;
-  const random = cryptoObj?.randomUUID ? cryptoObj.randomUUID() : `${Date.now()}-${Math.random()}`;
-  return `${file.name}-${file.size}-${random}`;
+type MediaKind = 'IMAGE' | 'VIDEO';
+
+function mediaKindFromMime(mime?: string | null): MediaKind {
+  return mime && mime.startsWith('video/') ? 'VIDEO' : 'IMAGE';
 }
 
 export default function CreatePostClient() {
@@ -67,18 +60,66 @@ export default function CreatePostClient() {
   const token = getToken();
   const bodyRef = useRef<HTMLTextAreaElement | null>(null);
   const presetAppliedRef = useRef(false);
-  const uploadsRef = useRef<UploadItem[]>([]);
 
   const presetTags = useMemo(() => {
     return mergeUniqueTags(sp.getAll('tag')).slice(0, TAG_LIMIT);
   }, [sp]);
 
+  const uppy = useMemo(() => {
+    const u = new Uppy({
+      autoProceed: true,
+      restrictions: {
+        maxNumberOfFiles: MEDIA_LIMIT,
+        allowedFileTypes: ['image/*', 'video/*'],
+      },
+      locale: zhCN,
+    });
+
+    u.use(AwsS3, {
+      async getUploadParameters(file) {
+        if (!token) throw new Error('要上传图片/视频的话，先登录一下更稳妥。');
+
+        const contentType = file.type || 'application/octet-stream';
+        const presign = await clientFetch<PresignUploadResponse>('/api/chek-media/v1/uploads:presign', {
+          method: 'POST',
+          auth: true,
+          body: JSON.stringify({
+            filename: file.name,
+            contentType,
+            sizeBytes: file.size,
+            purpose: 'post-media',
+          }),
+        });
+        if (!presign?.mediaObjectId) throw new Error('上传初始化失败');
+        if (!presign.putUrl) throw new Error('上传服务暂不可用，请稍后再试。');
+
+        u.setFileMeta(file.id, {
+          mediaObjectId: presign.mediaObjectId,
+          kind: mediaKindFromMime(contentType),
+          filename: file.name,
+          objectKey: presign.objectKey,
+        });
+
+        return {
+          method: 'PUT',
+          url: presign.putUrl,
+          fields: {},
+          headers: {
+            'Content-Type': contentType,
+          },
+        };
+      },
+    });
+
+    return u;
+  }, [token]);
+
+  const [uppyFiles, setUppyFiles] = useState(() => uppy.getFiles());
+
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [locationName, setLocationName] = useState('');
   const [occurredAt, setOccurredAt] = useState('');
-  const [uploads, setUploads] = useState<UploadItem[]>([]);
-  const [batchUploading, setBatchUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [tagQuery, setTagQuery] = useState('');
@@ -91,11 +132,18 @@ export default function CreatePostClient() {
 
   const selectedTags = useMemo(() => extractHashtags(body).slice(0, TAG_LIMIT), [body]);
   const pendingUploadCount = useMemo(
-    () => uploads.filter((u) => u.state === 'selected' || u.state === 'failed').length,
-    [uploads]
+    () => uppyFiles.filter((f) => !f.progress?.uploadComplete && !(f as any)?.error).length,
+    [uppyFiles]
   );
-  const uploadedCount = useMemo(() => uploads.filter((u) => u.state === 'uploaded' && u.mediaObjectId > 0).length, [uploads]);
-  const uploadingCount = useMemo(() => uploads.filter((u) => u.state === 'uploading').length, [uploads]);
+  const uploadedCount = useMemo(
+    () => uppyFiles.filter((f) => f.progress?.uploadComplete && Number(((f.meta as any)?.mediaObjectId as any) || 0) > 0).length,
+    [uppyFiles]
+  );
+  const uploadingCount = useMemo(
+    () => uppyFiles.filter((f) => Boolean(f.progress?.uploadStarted) && !f.progress?.uploadComplete).length,
+    [uppyFiles]
+  );
+  const failedUploadCount = useMemo(() => uppyFiles.filter((f) => Boolean((f as any)?.error)).length, [uppyFiles]);
 
   const tagSuggestions = useMemo(() => {
     const pool = mergeUniqueTags(selectedTags, presetTags, COMMON_TOPIC_TAGS);
@@ -109,10 +157,6 @@ export default function CreatePostClient() {
     setBody((prev) => (prev.trim() ? prev : `${presetTags.map((tag) => `#${tag}`).join(' ')} `));
     presetAppliedRef.current = true;
   }, [presetTags]);
-
-  useEffect(() => {
-    uploadsRef.current = uploads;
-  }, [uploads]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -137,6 +181,37 @@ export default function CreatePostClient() {
       // ignore bad drafts
     }
   }, []);
+
+  useEffect(() => {
+    const sync = () => setUppyFiles(uppy.getFiles());
+    sync();
+
+    uppy.on('file-added', sync);
+    uppy.on('file-removed', sync);
+    uppy.on('upload', sync);
+    uppy.on('upload-progress', sync);
+    uppy.on('upload-success', sync);
+    uppy.on('upload-error', sync);
+    uppy.on('complete', sync);
+
+    return () => {
+      uppy.off('file-added', sync);
+      uppy.off('file-removed', sync);
+      uppy.off('upload', sync);
+      uppy.off('upload-progress', sync);
+      uppy.off('upload-success', sync);
+      uppy.off('upload-error', sync);
+      uppy.off('complete', sync);
+    };
+  }, [uppy]);
+
+  useEffect(() => {
+    return () => {
+      try {
+        uppy.close();
+      } catch {}
+    };
+  }, [uppy]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -165,16 +240,6 @@ export default function CreatePostClient() {
     return () => window.clearTimeout(t);
   }, [title, body, locationName, occurredAt]);
 
-  useEffect(() => {
-    return () => {
-      for (const item of uploadsRef.current) {
-        try {
-          URL.revokeObjectURL(item.localUrl);
-        } catch {}
-      }
-    };
-  }, []);
-
   function clearDraft(options?: { keepUploads?: boolean }) {
     try {
       window.localStorage.removeItem(DRAFT_KEY);
@@ -185,7 +250,12 @@ export default function CreatePostClient() {
     setLocationName('');
     setOccurredAt('');
     setMsg(null);
-    if (!options?.keepUploads) clearUploads();
+    if (!options?.keepUploads) {
+      try {
+        uppy.cancelAll();
+        setUppyFiles(uppy.getFiles());
+      } catch {}
+    }
   }
 
   function syncTagDraft(text: string, cursor: number) {
@@ -252,172 +322,28 @@ export default function CreatePostClient() {
     setMsg(null);
   }
 
-  async function handleFiles(files: FileList | null) {
-    if (!files || files.length === 0) return;
-    const list = Array.from(files);
-    if (list.length === 0) return;
-
-    setMsg(null);
-    setUploads((prev) => {
-      const slots = Math.max(0, MEDIA_LIMIT - prev.length);
-      if (slots <= 0) return prev;
-      const accepted = list.slice(0, slots);
-      const appended = accepted.map((file) => {
-        const localUrl = URL.createObjectURL(file);
-        const kind: UploadItem['kind'] = file.type.startsWith('video/') ? 'VIDEO' : 'IMAGE';
-        return {
-          id: createUploadId(file),
-          file,
-          localUrl,
-          mediaObjectId: 0,
-          kind,
-          filename: file.name,
-          state: 'selected' as const,
-        };
-      });
-      return [...prev, ...appended];
-    });
-
-    const current = uploadsRef.current.length;
-    if (current + list.length > MEDIA_LIMIT) {
-      setMsg(`最多选择 ${MEDIA_LIMIT} 个媒体，超出的已忽略。`);
-    }
-  }
-
-  function removeUpload(id: string) {
-    setUploads((prev) => {
-      const target = prev.find((u) => u.id === id);
-      if (target) {
-        try {
-          URL.revokeObjectURL(target.localUrl);
-        } catch {}
-      }
-      return prev.filter((u) => u.id !== id);
-    });
-  }
-
-  function moveUpload(id: string, direction: -1 | 1) {
-    setUploads((prev) => {
-      const idx = prev.findIndex((u) => u.id === id);
-      if (idx < 0) return prev;
-      const nextIdx = idx + direction;
-      if (nextIdx < 0 || nextIdx >= prev.length) return prev;
-      const next = prev.slice();
-      const [item] = next.splice(idx, 1);
-      next.splice(nextIdx, 0, item);
-      return next;
-    });
-  }
-
-  function clearUploads() {
-    setUploads((prev) => {
-      for (const item of prev) {
-        try {
-          URL.revokeObjectURL(item.localUrl);
-        } catch {}
-      }
-      return [];
-    });
-  }
-
-  async function uploadSingle(item: UploadItem): Promise<boolean> {
-    if (!token) {
-      setMsg('先登录再上传图片/视频更稳妥。');
-      return false;
-    }
-
-    setUploads((prev) =>
-      prev.map((it) => (it.id === item.id ? { ...it, state: 'uploading', error: undefined } : it))
-    );
-
-    try {
-      const presign = await clientFetch<PresignUploadResponse>('/api/chek-media/v1/uploads:presign', {
-        method: 'POST',
-        auth: true,
-        body: JSON.stringify({
-          filename: item.file.name,
-          contentType: item.file.type || 'application/octet-stream',
-          sizeBytes: item.file.size,
-        }),
-      });
-      if (!presign?.mediaObjectId) throw new Error('上传初始化失败');
-
-      if (presign.putUrl) {
-        const putRes = await fetch(presign.putUrl, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': item.file.type || 'application/octet-stream',
-          },
-          body: item.file,
-        });
-        if (!putRes.ok) throw new Error(`上传失败 HTTP ${putRes.status}`);
-      }
-
-      setUploads((prev) =>
-        prev.map((it) =>
-          it.id === item.id
-            ? { ...it, mediaObjectId: presign.mediaObjectId, state: 'uploaded', error: undefined }
-            : it
-        )
-      );
-      return true;
-    } catch (e: any) {
-      setUploads((prev) =>
-        prev.map((it) =>
-          it.id === item.id
-            ? { ...it, mediaObjectId: 0, state: 'failed', error: e?.message || '上传失败' }
-            : it
-        )
-      );
-      return false;
-    }
-  }
-
-  async function retryUpload(id: string) {
-    const target = uploadsRef.current.find((u) => u.id === id);
-    if (!target || target.state === 'uploading') return;
-    setMsg(null);
-    await uploadSingle(target);
-  }
-
-  async function uploadSelectedMedia(options?: { silent?: boolean }): Promise<boolean> {
-    if (batchUploading) return false;
-    const queue = uploadsRef.current.filter((u) => u.state === 'selected' || u.state === 'failed');
-    if (queue.length === 0) return true;
+  async function ensureMediaUploaded(): Promise<boolean> {
     if (!token) {
       setMsg('要上传图片/视频的话，先登录一下更稳妥。');
       return false;
     }
 
-    setBatchUploading(true);
-    if (!options?.silent) setMsg(`正在上传 ${queue.length} 个媒体…`);
+    const files = uppy.getFiles();
+    if (files.length === 0) return true;
 
-    let successCount = 0;
-    for (const item of queue) {
-      const ok = await uploadSingle(item);
-      if (ok) successCount += 1;
+    if (files.some((f) => Boolean((f as any)?.error))) return false;
+
+    if (files.some((f) => !f.progress?.uploadComplete)) {
+      const result = await uppy.upload();
+      return (result.failed?.length || 0) === 0;
     }
 
-    const failedCount = queue.length - successCount;
-    setBatchUploading(false);
-
-    if (!options?.silent) {
-      if (failedCount > 0) {
-        setMsg(`已上传 ${successCount} 个，失败 ${failedCount} 个。你可以重试失败项。`);
-      } else {
-        setMsg(`已上传 ${successCount} 个媒体。`);
-      }
-    }
-    return failedCount === 0;
+    return true;
   }
 
   async function submit() {
     if (!token) {
       setMsg('要发相辅的话，先登录一下更方便。');
-      return;
-    }
-    if (batchUploading) {
-      setMsg('图片还在上传中，稍等一下再发布。');
       return;
     }
     const b = body.trim();
@@ -426,24 +352,28 @@ export default function CreatePostClient() {
       return;
     }
 
-    if (pendingUploadCount > 0) {
-      const ok = await uploadSelectedMedia({ silent: true });
+    if (uppy.getFiles().some((f) => !f.progress?.uploadComplete)) {
+      setMsg('媒体上传中，稍等一下…');
+      const ok = await ensureMediaUploaded();
       if (!ok) {
-        setMsg('有媒体上传失败了，先重试失败项再发布。');
+        setMsg('有媒体上传失败了，先处理失败项再发布。');
         return;
       }
     }
-
-    if (uploadsRef.current.some((u) => u.state === 'uploading')) {
-      setMsg('图片还在上传中，稍等一下再发布。');
+    if (failedUploadCount > 0) {
+      setMsg('有媒体上传失败了，先处理失败项再发布。');
       return;
     }
 
     const tags = extractHashtags(b).slice(0, TAG_LIMIT);
 
-    const media = uploadsRef.current
-      .filter((u) => u.state === 'uploaded' && u.mediaObjectId > 0)
-      .map((u) => ({ mediaObjectId: u.mediaObjectId, kind: u.kind }));
+    const media = uppy
+      .getFiles()
+      .filter((f) => f.progress?.uploadComplete && Number(((f.meta as any)?.mediaObjectId as any) || 0) > 0)
+      .map((f) => ({
+        mediaObjectId: Number(((f.meta as any)?.mediaObjectId as any) || 0),
+        kind: ((f.meta as any)?.kind as MediaKind) === 'VIDEO' ? 'VIDEO' : 'IMAGE',
+      }));
 
     setSubmitting(true);
     setMsg(null);
@@ -460,7 +390,7 @@ export default function CreatePostClient() {
           media,
         }),
       });
-      clearDraft({ keepUploads: true });
+      clearDraft();
       router.replace(`/p/${created.postId}`);
     } catch (e: any) {
       setMsg(e?.message || '发布失败了，真诚抱歉。你可以再试一次。');
@@ -573,43 +503,9 @@ export default function CreatePostClient() {
                   </div>
                 ) : null}
 
-                {uploads.length > 0 ? (
-                  <div
-                    aria-label="媒体预览"
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(3, 1fr)',
-                      gap: 8,
-                      marginBottom: 10,
-                    }}
-                  >
-                    {uploads.slice(0, 6).map((u) =>
-                      u.kind === 'VIDEO' ? (
-                        <div
-                          key={u.id}
-                          style={{
-                            borderRadius: 16,
-                            background: 'rgba(0,0,0,0.06)',
-                            aspectRatio: '1 / 1',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 900,
-                            color: 'rgba(0,0,0,0.55)',
-                          }}
-                        >
-                          视频
-                        </div>
-                      ) : (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          key={u.id}
-                          src={u.localUrl}
-                          alt=""
-                          style={{ width: '100%', borderRadius: 16, aspectRatio: '1 / 1', objectFit: 'cover' }}
-                        />
-                      )
-                    )}
+                {uppyFiles.length > 0 ? (
+                  <div className="chek-muted" style={{ marginBottom: 10, fontSize: 12, lineHeight: 1.6 }}>
+                    已选择 {uppyFiles.length} 个媒体。预览与上传进度请看下方「配图/视频」区域。
                   </div>
                 ) : null}
 
@@ -714,155 +610,40 @@ export default function CreatePostClient() {
         </div>
 
         <div className="chek-card" style={{ padding: 16 }}>
-          <div style={{ fontWeight: 900, marginBottom: 8 }}>配图/视频（可选）</div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <label
-              className="chek-chip gray"
-              style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-            >
-              选择图片/视频
-              <input
-                type="file"
-                accept="image/*,video/*"
-                multiple
-                style={{ display: 'none' }}
-                onChange={(e) => {
-                  handleFiles(e.target.files);
-                  e.currentTarget.value = '';
-                }}
-              />
-            </label>
-            <button
-              type="button"
-              className="chek-chip"
-              style={{ border: 'none', cursor: pendingUploadCount > 0 ? 'pointer' : 'not-allowed' }}
-              onClick={() => uploadSelectedMedia()}
-              disabled={pendingUploadCount === 0 || batchUploading || submitting}
-            >
-              {batchUploading ? '上传中…' : `上传所选 (${pendingUploadCount})`}
-            </button>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 8 }}>
+            <div style={{ fontWeight: 900 }}>配图/视频（可选）</div>
             <button
               type="button"
               className="chek-chip gray"
-              style={{ border: 'none', cursor: uploads.length > 0 ? 'pointer' : 'not-allowed' }}
-              onClick={clearUploads}
-              disabled={uploads.length === 0 || batchUploading || submitting}
-            >
-              清空选择
-            </button>
-          </div>
-
-          <div className="chek-muted" style={{ marginTop: 8, fontSize: 12 }}>
-            已选 {uploads.length}/{MEDIA_LIMIT} · 待上传 {pendingUploadCount} · 上传中 {uploadingCount} · 已上传 {uploadedCount}
-          </div>
-
-          {uploads.length > 0 ? (
-            <div
-              style={{
-                marginTop: 12,
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: 10,
+              style={{ border: 'none', cursor: uppyFiles.length > 0 ? 'pointer' : 'not-allowed' }}
+              onClick={() => {
+                try {
+                  uppy.cancelAll();
+                  setMsg(null);
+                  setUppyFiles(uppy.getFiles());
+                } catch {}
               }}
+              disabled={uppyFiles.length === 0 || submitting}
             >
-              {uploads.map((u, idx) => (
-                <div
-                  key={u.id}
-                  className="chek-card"
-                  style={{
-                    padding: 6,
-                    borderRadius: 16,
-                    border: u.state === 'failed' ? '1px solid rgba(211,119,205,0.5)' : undefined,
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4, gap: 6 }}>
-                    <span className="chek-muted" style={{ fontSize: 10 }}>
-                      {idx === 0 ? '封面' : `第${idx + 1}张`}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => removeUpload(u.id)}
-                      style={{
-                        border: 'none',
-                        background: 'rgba(0,0,0,0.06)',
-                        borderRadius: 999,
-                        width: 20,
-                        height: 20,
-                        lineHeight: '20px',
-                        cursor: 'pointer',
-                      }}
-                      aria-label="移除"
-                    >
-                      ×
-                    </button>
-                  </div>
-                  {u.kind === 'VIDEO' ? (
-                    <video src={u.localUrl} controls style={{ width: '100%', borderRadius: 12 }} />
-                  ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={u.localUrl} alt={u.filename} style={{ width: '100%', borderRadius: 12, aspectRatio: '1 / 1', objectFit: 'cover' }} />
-                  )}
-                  <div className="chek-muted" style={{ fontSize: 11, marginTop: 6 }}>
-                    {u.state === 'selected'
-                      ? '已选择，待上传'
-                      : u.state === 'uploading'
-                      ? '上传中…'
-                      : u.state === 'uploaded'
-                      ? '已上传'
-                      : `上传失败：${u.error || '可重试'}`}
-                  </div>
-                  <div style={{ marginTop: 6, display: 'flex', gap: 4, justifyContent: 'space-between' }}>
-                    <button
-                      type="button"
-                      onClick={() => moveUpload(u.id, -1)}
-                      disabled={idx === 0 || batchUploading || u.state === 'uploading'}
-                      style={{
-                        border: 'none',
-                        borderRadius: 10,
-                        padding: '3px 6px',
-                        fontSize: 10,
-                        cursor: idx === 0 || batchUploading || u.state === 'uploading' ? 'not-allowed' : 'pointer',
-                        background: 'rgba(0,0,0,0.06)',
-                      }}
-                    >
-                      上移
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => moveUpload(u.id, 1)}
-                      disabled={idx === uploads.length - 1 || batchUploading || u.state === 'uploading'}
-                      style={{
-                        border: 'none',
-                        borderRadius: 10,
-                        padding: '3px 6px',
-                        fontSize: 10,
-                        cursor: idx === uploads.length - 1 || batchUploading || u.state === 'uploading' ? 'not-allowed' : 'pointer',
-                        background: 'rgba(0,0,0,0.06)',
-                      }}
-                    >
-                      下移
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => retryUpload(u.id)}
-                      disabled={u.state !== 'failed' || batchUploading || submitting}
-                      style={{
-                        border: 'none',
-                        borderRadius: 10,
-                        padding: '3px 6px',
-                        fontSize: 10,
-                        cursor: u.state !== 'failed' || batchUploading || submitting ? 'not-allowed' : 'pointer',
-                        background: 'rgba(51,136,255,0.14)',
-                        color: 'rgba(20,78,168,0.95)',
-                      }}
-                    >
-                      重试
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : null}
+              清空
+            </button>
+          </div>
+
+          <div className="chek-muted" style={{ marginBottom: 8, fontSize: 12 }}>
+            已选 {uppyFiles.length}/{MEDIA_LIMIT} · 待上传 {pendingUploadCount} · 上传中 {uploadingCount} · 已上传 {uploadedCount} · 失败{' '}
+            {failedUploadCount}
+          </div>
+
+          <div style={{ borderRadius: 16, overflow: 'hidden' }}>
+            <Dashboard
+              uppy={uppy}
+              height={360}
+              proudlyDisplayPoweredByUppy={false}
+              hideUploadButton
+              showProgressDetails
+              note={`最多 ${MEDIA_LIMIT} 个，支持图片/视频。选择后会自动上传。`}
+            />
+          </div>
         </div>
 
         <button
