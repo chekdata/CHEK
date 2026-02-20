@@ -21,9 +21,9 @@ export type PostDTO = {
   postId: number;
   title?: string;
   body: string;
-  sourcePlatform?: string;
-  sourceId?: string;
-  sourceUrl?: string;
+  sourcePlatform?: string | null;
+  sourceId?: string | null;
+  sourceUrl?: string | null;
   tags?: string[];
   locationName?: string;
   lng?: number;
