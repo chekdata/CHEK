@@ -1,11 +1,10 @@
-FROM node:20-bookworm-slim
+FROM mcr.microsoft.com/playwright:v1.58.2-jammy
 
 WORKDIR /app
 
-COPY package.json ./
+COPY package.json package-lock.json ./
 
-RUN npm install --omit=dev
-RUN npx playwright install --with-deps chromium
+RUN npm ci --omit=dev
 
 COPY src ./src
 

@@ -31,9 +31,6 @@ export default function WeChatCallbackPage() {
   ).trim();
   const wechatScope = String(process.env.CHEK_WECHAT_SCOPE || process.env.NEXT_PUBLIC_WECHAT_SCOPE || '').trim() || 'snsapi_userinfo';
   const authClientId = String(process.env.CHEK_AUTH_CLIENT_ID || process.env.NEXT_PUBLIC_AUTH_CLIENT_ID || '').trim() || 'app';
-  const wechatPackageName =
-    String(process.env.CHEK_WECHAT_PACKAGE_NAME || process.env.NEXT_PUBLIC_WECHAT_PACKAGE_NAME || '').trim() ||
-    'com.chek.app';
 
   return (
     <Suspense
@@ -44,7 +41,6 @@ export default function WeChatCallbackPage() {
         wechatOpenAppId={wechatOpenAppId}
         wechatScope={wechatScope}
         authClientId={authClientId}
-        wechatPackageName={wechatPackageName}
       />
     </Suspense>
   );
