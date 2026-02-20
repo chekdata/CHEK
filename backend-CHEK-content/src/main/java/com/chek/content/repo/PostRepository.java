@@ -4,6 +4,7 @@ import com.chek.content.model.comment.CommentDTO;
 import com.chek.content.model.comment.CreateCommentRequest;
 import com.chek.content.model.post.CreatePostRequest;
 import com.chek.content.model.post.CreatePostMediaItem;
+import com.chek.content.model.post.IngestExternalPostRequest;
 import com.chek.content.model.post.PostDTO;
 import com.chek.content.model.post.PostMediaDTO;
 import java.math.BigDecimal;
@@ -26,6 +27,85 @@ public class PostRepository {
 
   public PostRepository(JdbcTemplate jdbcTemplate) {
     this.jdbcTemplate = jdbcTemplate;
+  }
+
+  public PostDTO upsertExternal(IngestExternalPostRequest req) {
+    String platform = (req.getSourcePlatform() == null) ? "" : req.getSourcePlatform().trim();
+    String sourceId = (req.getSourceId() == null) ? "" : req.getSourceId().trim();
+    if (platform.isBlank() || sourceId.isBlank()) {
+      throw new IllegalArgumentException("missing sourcePlatform/sourceId");
+    }
+
+    Long existingId = findPostIdBySource(platform, sourceId);
+    if (existingId != null) {
+      jdbcTemplate.update(
+          "UPDATE chek_content_post SET title = ?, body_md = ?, occurred_at = ?, location_name = ?, lng = ?, lat = ?, source_url = ?, updated_at = NOW() "
+              + "WHERE id = ?",
+          req.getTitle(),
+          req.getBody(),
+          req.getOccurredAt() == null ? null : Timestamp.from(req.getOccurredAt()),
+          req.getLocationName(),
+          req.getLng() == null ? null : BigDecimal.valueOf(req.getLng()),
+          req.getLat() == null ? null : BigDecimal.valueOf(req.getLat()),
+          req.getSourceUrl(),
+          existingId);
+      jdbcTemplate.update("DELETE FROM chek_content_post_tag WHERE post_id = ?", existingId);
+      upsertPostTags(existingId, req.getTags());
+      return get(existingId);
+    }
+
+    String author = (req.getAuthorUserOneId() == null) ? "" : req.getAuthorUserOneId().trim();
+    if (author.isBlank()) author = "投诉雷达";
+    final String authorFinal = author;
+    final String platformFinal = platform;
+    final String sourceIdFinal = sourceId;
+
+    KeyHolder keyHolder = new GeneratedKeyHolder();
+    try {
+      jdbcTemplate.update(
+          conn -> {
+            PreparedStatement ps =
+                conn.prepareStatement(
+                    "INSERT INTO chek_content_post(title, body_md, is_public, is_indexable, occurred_at, location_name, lng, lat, author_user_one_id, source_platform, source_id, source_url, created_at, updated_at) "
+                        + "VALUES(?, ?, TRUE, TRUE, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())",
+                    new String[] {"id"});
+            ps.setString(1, req.getTitle());
+            ps.setString(2, req.getBody());
+            ps.setTimestamp(3, req.getOccurredAt() == null ? null : Timestamp.from(req.getOccurredAt()));
+            ps.setString(4, req.getLocationName());
+            ps.setBigDecimal(5, req.getLng() == null ? null : BigDecimal.valueOf(req.getLng()));
+            ps.setBigDecimal(6, req.getLat() == null ? null : BigDecimal.valueOf(req.getLat()));
+            ps.setString(7, authorFinal);
+            ps.setString(8, platformFinal);
+            ps.setString(9, sourceIdFinal);
+            ps.setString(10, req.getSourceUrl());
+            return ps;
+          },
+          keyHolder);
+    } catch (DataIntegrityViolationException ignored) {
+      // Likely duplicate source unique index in a race; fall through to fetch.
+    }
+
+    Long createdId =
+        keyHolder.getKey() == null
+            ? findPostIdBySource(platform, sourceId)
+            : Long.valueOf(keyHolder.getKey().longValue());
+    if (createdId == null) {
+      throw new IllegalStateException("failed to upsert external post");
+    }
+
+    upsertPostTags(createdId, req.getTags());
+    return get(createdId);
+  }
+
+  private Long findPostIdBySource(String platform, String sourceId) {
+    List<Long> list =
+        jdbcTemplate.query(
+            "SELECT id FROM chek_content_post WHERE source_platform = ? AND source_id = ? LIMIT 1",
+            (rs, rowNum) -> rs.getLong("id"),
+            platform,
+            sourceId);
+    return list.isEmpty() ? null : list.get(0);
   }
 
   public List<PostDTO> list(
@@ -51,6 +131,7 @@ public class PostRepository {
     sql.append(
         "p.id, p.title, p.body_md, p.location_name, p.lng, p.lat, p.occurred_at, "
             + "p.author_user_one_id, p.is_public, p.is_indexable, p.created_at, p.updated_at, "
+            + "p.source_platform, p.source_id, p.source_url, "
             + "(SELECT COUNT(1) FROM chek_content_comment c WHERE c.post_id = p.id) AS comment_count, "
             + "(SELECT COUNT(1) FROM chek_content_post_like l WHERE l.post_id = p.id) AS like_count, "
             + "(SELECT COUNT(1) FROM chek_content_post_favorite f WHERE f.post_id = p.id) AS favorite_count, ");
@@ -117,6 +198,9 @@ public class PostRepository {
               Timestamp occurredAt = rs.getTimestamp("occurred_at");
               dto.setOccurredAt(occurredAt == null ? null : occurredAt.toInstant());
               dto.setAuthorUserOneId(rs.getString("author_user_one_id"));
+              dto.setSourcePlatform(rs.getString("source_platform"));
+              dto.setSourceId(rs.getString("source_id"));
+              dto.setSourceUrl(rs.getString("source_url"));
               dto.setPublic(rs.getBoolean("is_public"));
               dto.setIndexable(rs.getBoolean("is_indexable"));
               dto.setCommentCount(rs.getLong("comment_count"));
@@ -158,6 +242,7 @@ public class PostRepository {
         jdbcTemplate.query(
             "SELECT p.id, p.title, p.body_md, p.location_name, p.lng, p.lat, p.occurred_at, "
                 + "p.author_user_one_id, p.is_public, p.is_indexable, p.created_at, p.updated_at, "
+                + "p.source_platform, p.source_id, p.source_url, "
                 + "(SELECT COUNT(1) FROM chek_content_comment c WHERE c.post_id = p.id) AS comment_count, "
                 + "(SELECT COUNT(1) FROM chek_content_post_like l WHERE l.post_id = p.id) AS like_count, "
                 + "(SELECT COUNT(1) FROM chek_content_post_favorite f WHERE f.post_id = p.id) AS favorite_count, "
@@ -177,6 +262,9 @@ public class PostRepository {
               Timestamp occurredAt = rs.getTimestamp("occurred_at");
               dto.setOccurredAt(occurredAt == null ? null : occurredAt.toInstant());
               dto.setAuthorUserOneId(rs.getString("author_user_one_id"));
+              dto.setSourcePlatform(rs.getString("source_platform"));
+              dto.setSourceId(rs.getString("source_id"));
+              dto.setSourceUrl(rs.getString("source_url"));
               dto.setPublic(rs.getBoolean("is_public"));
               dto.setIndexable(rs.getBoolean("is_indexable"));
               dto.setCommentCount(rs.getLong("comment_count"));
@@ -318,6 +406,7 @@ public class PostRepository {
         new StringBuilder(
             "SELECT p.id, p.title, p.body_md, p.location_name, p.lng, p.lat, p.occurred_at, "
                 + "p.author_user_one_id, p.is_public, p.is_indexable, p.created_at, p.updated_at, "
+                + "p.source_platform, p.source_id, p.source_url, "
                 + "(SELECT COUNT(1) FROM chek_content_comment c WHERE c.post_id = p.id) AS comment_count, "
                 + "(SELECT COUNT(1) FROM chek_content_post_like l WHERE l.post_id = p.id) AS like_count, "
                 + "(SELECT COUNT(1) FROM chek_content_post_favorite f WHERE f.post_id = p.id) AS favorite_count "
@@ -349,6 +438,9 @@ public class PostRepository {
               Timestamp occurredAt = rs.getTimestamp("occurred_at");
               dto.setOccurredAt(occurredAt == null ? null : occurredAt.toInstant());
               dto.setAuthorUserOneId(rs.getString("author_user_one_id"));
+              dto.setSourcePlatform(rs.getString("source_platform"));
+              dto.setSourceId(rs.getString("source_id"));
+              dto.setSourceUrl(rs.getString("source_url"));
               dto.setPublic(rs.getBoolean("is_public"));
               dto.setIndexable(rs.getBoolean("is_indexable"));
               dto.setCommentCount(rs.getLong("comment_count"));
@@ -383,6 +475,7 @@ public class PostRepository {
         new StringBuilder(
             "SELECT p.id, p.title, p.body_md, p.location_name, p.lng, p.lat, p.occurred_at, "
                 + "p.author_user_one_id, p.is_public, p.is_indexable, p.created_at, p.updated_at, "
+                + "p.source_platform, p.source_id, p.source_url, "
                 + "(SELECT COUNT(1) FROM chek_content_comment c WHERE c.post_id = p.id) AS comment_count, "
                 + "(SELECT COUNT(1) FROM chek_content_post_like l WHERE l.post_id = p.id) AS like_count, "
                 + "(SELECT COUNT(1) FROM chek_content_post_favorite f WHERE f.post_id = p.id) AS favorite_count, "
@@ -417,6 +510,9 @@ public class PostRepository {
               Timestamp occurredAt = rs.getTimestamp("occurred_at");
               dto.setOccurredAt(occurredAt == null ? null : occurredAt.toInstant());
               dto.setAuthorUserOneId(rs.getString("author_user_one_id"));
+              dto.setSourcePlatform(rs.getString("source_platform"));
+              dto.setSourceId(rs.getString("source_id"));
+              dto.setSourceUrl(rs.getString("source_url"));
               dto.setPublic(rs.getBoolean("is_public"));
               dto.setIndexable(rs.getBoolean("is_indexable"));
               dto.setCommentCount(rs.getLong("comment_count"));

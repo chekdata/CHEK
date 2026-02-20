@@ -26,6 +26,14 @@ async function pickFirstImageUrlFromMedia(media: PostMediaDTO[] | null | undefin
   return '';
 }
 
+function formatSourceLabel(platform?: string | null): string {
+  const p = String(platform || '').trim().toUpperCase();
+  if (!p) return '';
+  if (p === 'WEIBO') return '微博';
+  if (p === 'XHS' || p === 'XIAOHONGSHU') return '小红书';
+  return p;
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -86,6 +94,8 @@ export default async function PostDetailPage({ params }: { params: Promise<{ pos
   if (!post) notFound();
   if (!post.isPublic) notFound();
 
+  const sourceUrl = String(post.sourceUrl || '').trim();
+  const sourceLabel = formatSourceLabel(post.sourcePlatform);
   const rawTitle = post.title?.trim() || '';
   const title = rawTitle || '相辅';
   const uiTitle = rawTitle || '无标题';
@@ -212,6 +222,20 @@ export default async function PostDetailPage({ params }: { params: Promise<{ pos
                     #{t}
                   </Link>
                 ))}
+              </div>
+            ) : null}
+
+            {sourceUrl ? (
+              <div style={{ fontSize: 12, fontWeight: 800 }}>
+                <a
+                  href={sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="chek-muted"
+                  style={{ textDecoration: 'none' }}
+                >
+                  来源{sourceLabel ? `：${sourceLabel}` : ''}（点击跳转）
+                </a>
               </div>
             ) : null}
           </header>
