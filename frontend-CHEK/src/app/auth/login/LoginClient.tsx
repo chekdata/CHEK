@@ -16,7 +16,8 @@ import {
 } from '@/lib/wechat-oauth';
 
 type LoginClientProps = {
-  wechatAppId?: string;
+  wechatMpAppId?: string;
+  wechatOpenAppId?: string;
   wechatScope?: string;
   authClientId?: string;
 };
@@ -33,9 +34,15 @@ export default function LoginClient(props: LoginClientProps) {
   const [msg, setMsg] = useState<string | null>(null);
 
   function wechatLogin() {
-    const appId = String(props.wechatAppId || '').trim();
+    const appId = isWeChatBrowser()
+      ? String(props.wechatMpAppId || '').trim()
+      : String(props.wechatOpenAppId || '').trim();
     if (!appId) {
-      setMsg('暂未配置微信 AppID：请先配置 CHEK_WECHAT_APP_ID（或 NEXT_PUBLIC_WECHAT_APP_ID）。');
+      setMsg(
+        isWeChatBrowser()
+          ? '暂未配置公众号 AppID：请先配置 CHEK_WECHAT_MP_APP_ID（或 NEXT_PUBLIC_WECHAT_MP_APP_ID）。'
+          : '暂未配置开放平台网站应用 AppID：请先配置 CHEK_WECHAT_OPEN_APP_ID（或 NEXT_PUBLIC_WECHAT_OPEN_APP_ID）。'
+      );
       return;
     }
     const s = storeWechatOauthAttempt(sanitizeNext(next));

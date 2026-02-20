@@ -22,7 +22,8 @@ type WechatLoginDTO = {
 };
 
 type WeChatCallbackClientProps = {
-  wechatAppId?: string;
+  wechatMpAppId?: string;
+  wechatOpenAppId?: string;
   wechatScope?: string;
   authClientId?: string;
   wechatPackageName?: string;
@@ -104,9 +105,14 @@ export default function WeChatCallbackClient(props: WeChatCallbackClientProps) {
   }, [code, router, state, props.authClientId, props.wechatPackageName]);
 
   function retryWechatLogin() {
-    const appId = String(props.wechatAppId || '').trim();
+    const isWx = /MicroMessenger/i.test(String(window.navigator?.userAgent || ''));
+    const appId = isWx ? String(props.wechatMpAppId || '').trim() : String(props.wechatOpenAppId || '').trim();
     if (!appId) {
-      setMsg('未配置微信 AppID：请先配置 CHEK_WECHAT_APP_ID（或 NEXT_PUBLIC_WECHAT_APP_ID）。');
+      setMsg(
+        isWx
+          ? '未配置公众号 AppID：请先配置 CHEK_WECHAT_MP_APP_ID（或 NEXT_PUBLIC_WECHAT_MP_APP_ID）。'
+          : '未配置开放平台网站应用 AppID：请先配置 CHEK_WECHAT_OPEN_APP_ID（或 NEXT_PUBLIC_WECHAT_OPEN_APP_ID）。'
+      );
       return;
     }
     const next = sanitizeNext('/feed');

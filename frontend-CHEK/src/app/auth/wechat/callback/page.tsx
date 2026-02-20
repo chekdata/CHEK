@@ -15,7 +15,20 @@ export const metadata: Metadata = makePageMetadata({
 });
 
 export default function WeChatCallbackPage() {
-  const wechatAppId = String(process.env.CHEK_WECHAT_APP_ID || process.env.NEXT_PUBLIC_WECHAT_APP_ID || '').trim();
+  const wechatMpAppId = String(
+    process.env.CHEK_WECHAT_MP_APP_ID ||
+      process.env.NEXT_PUBLIC_WECHAT_MP_APP_ID ||
+      process.env.CHEK_WECHAT_APP_ID ||
+      process.env.NEXT_PUBLIC_WECHAT_APP_ID ||
+      ''
+  ).trim();
+  const wechatOpenAppId = String(
+    process.env.CHEK_WECHAT_OPEN_APP_ID ||
+      process.env.NEXT_PUBLIC_WECHAT_OPEN_APP_ID ||
+      process.env.CHEK_WECHAT_APP_ID ||
+      process.env.NEXT_PUBLIC_WECHAT_APP_ID ||
+      ''
+  ).trim();
   const wechatScope = String(process.env.CHEK_WECHAT_SCOPE || process.env.NEXT_PUBLIC_WECHAT_SCOPE || '').trim() || 'snsapi_userinfo';
   const authClientId = String(process.env.CHEK_AUTH_CLIENT_ID || process.env.NEXT_PUBLIC_AUTH_CLIENT_ID || '').trim() || 'app';
   const wechatPackageName =
@@ -27,7 +40,8 @@ export default function WeChatCallbackPage() {
       fallback={<PageLoading title="微信登录处理中" hint="正在校验授权状态并准备跳转。" rows={1} />}
     >
       <WeChatCallbackClient
-        wechatAppId={wechatAppId}
+        wechatMpAppId={wechatMpAppId}
+        wechatOpenAppId={wechatOpenAppId}
         wechatScope={wechatScope}
         authClientId={authClientId}
         wechatPackageName={wechatPackageName}
