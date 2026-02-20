@@ -23,6 +23,24 @@ function extractWeiboMid(url) {
   return '';
 }
 
+function isWeiboHost(hostname) {
+  const h = String(hostname || '').toLowerCase();
+  return h === 'weibo.com' || h.endsWith('.weibo.com');
+}
+
+function isAllowedWeiboUrl(url) {
+  try {
+    const u = new URL(String(url || ''));
+    const host = String(u.hostname || '').toLowerCase();
+    if (!isWeiboHost(host)) return false;
+    if (host === 'passport.weibo.com') return false;
+    if (host === 's.weibo.com') return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function collectSearchResults(page, keyword, maxLinks, log) {
   const url = buildSearchUrl(keyword);
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60_000 });
@@ -40,9 +58,6 @@ async function collectSearchResults(page, keyword, maxLinks, log) {
     for (const a of anchors) {
       const href = a.getAttribute('href') || '';
       if (!href) continue;
-      if (href.includes('passport.weibo.com')) continue;
-      if (href.includes('s.weibo.com')) continue;
-      if (!href.includes('weibo.com')) continue;
       const text = (a.textContent || '').trim();
       out.push({ href, text });
     }
@@ -54,7 +69,7 @@ async function collectSearchResults(page, keyword, maxLinks, log) {
       url: toAbsoluteWeiboUrl(x.href),
       hint: safeText(x.text, 80),
     }))
-    .filter((x) => x.url.includes('weibo.com'));
+    .filter((x) => isAllowedWeiboUrl(x.url));
 
   const uniq = uniqBy(normalized, (x) => x.url);
   if (uniq.length === 0) {
@@ -136,9 +151,6 @@ function stripHtml(s) {
     .replace(/<\/p>/gi, '\n')
     .replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
     .trim();
 }
 
