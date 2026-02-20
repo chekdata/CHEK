@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Uppy from '@uppy/core';
 import AwsS3 from '@uppy/aws-s3';
-import { Dashboard } from '@uppy/react';
+import Dashboard from '@uppy/react/dashboard';
 import zhCN from '@uppy/locales/lib/zh_CN';
 import { UnifiedTagPicker } from '@/components/UnifiedTagPicker';
 import { MarkdownPreview } from '@/components/MarkdownPreview';
@@ -76,6 +76,7 @@ export default function CreatePostClient() {
     });
 
     u.use(AwsS3, {
+      shouldUseMultipart: false,
       async getUploadParameters(file) {
         if (!token) throw new Error('要上传图片/视频的话，先登录一下更稳妥。');
 
@@ -208,7 +209,7 @@ export default function CreatePostClient() {
   useEffect(() => {
     return () => {
       try {
-        uppy.close();
+          uppy.destroy();
       } catch {}
     };
   }, [uppy]);
@@ -335,7 +336,7 @@ export default function CreatePostClient() {
 
     if (files.some((f) => !f.progress?.uploadComplete)) {
       const result = await uppy.upload();
-      return (result.failed?.length || 0) === 0;
+      return (result?.failed?.length || 0) === 0;
     }
 
     return true;
@@ -640,7 +641,6 @@ export default function CreatePostClient() {
               height={360}
               proudlyDisplayPoweredByUppy={false}
               hideUploadButton
-              showProgressDetails
               note={`最多 ${MEDIA_LIMIT} 个，支持图片/视频。选择后会自动上传。`}
             />
           </div>

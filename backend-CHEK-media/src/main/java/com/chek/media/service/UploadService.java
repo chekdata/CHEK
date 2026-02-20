@@ -181,13 +181,13 @@ public class UploadService {
   }
 
   private static S3Presigner buildPresigner(String region, String endpoint) {
-    S3Presigner.Builder b = S3Presigner.builder().region(Region.of(region == null ? "cn-beijing" : region));
+    var b = S3Presigner.builder().region(Region.of(region == null ? "cn-beijing" : region));
     if (endpoint != null && !endpoint.isBlank()) b = b.endpointOverride(URI.create(endpoint));
     return b.build();
   }
 
   private static S3Client buildClient(String region, String endpoint) {
-    S3Client.Builder b = S3Client.builder().region(Region.of(region == null ? "cn-beijing" : region));
+    var b = S3Client.builder().region(Region.of(region == null ? "cn-beijing" : region));
     if (endpoint != null && !endpoint.isBlank()) b = b.endpointOverride(URI.create(endpoint));
     return b.build();
   }
