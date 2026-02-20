@@ -151,6 +151,8 @@ function stripHtml(s) {
     .replace(/<\/p>/gi, '\n')
     .replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/g, ' ')
+    .replace(/</g, '＜')
+    .replace(/>/g, '＞')
     .trim();
 }
 
