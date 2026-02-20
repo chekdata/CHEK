@@ -1,6 +1,8 @@
 const SS_WX_STATE = 'chek.wx_oauth_state';
 const SS_WX_NEXT = 'chek.wx_oauth_next';
 const SS_WX_AT = 'chek.wx_oauth_at';
+const SS_WX_CHANNEL = 'chek.wx_oauth_channel';
+const SS_WX_RET = 'chek.wx_oauth_ret';
 
 function basePathFromEnv(): string {
   const raw = String(process.env.NEXT_PUBLIC_CHEK_BASE_PATH || '').trim();
@@ -39,30 +41,66 @@ function makeState(): string {
   return `chek_${Math.random().toString(16).slice(2)}_${Date.now()}`;
 }
 
-export function storeWechatOauthAttempt(next: string): string {
+export type WechatLoginChannel = 'mp' | 'open' | 'app';
+function sanitizeRetUrl(retUrl: string | null | undefined): string {
+  const raw = String(retUrl || '').trim();
+  if (!raw) return '';
+  try {
+    if (typeof window === 'undefined' || !window.location) return '';
+    const u = new URL(raw, window.location.origin);
+    if (u.origin !== window.location.origin) return '';
+    // only allow http(s)
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return '';
+    return u.toString();
+  } catch {
+    return '';
+  }
+}
+
+export function storeWechatOauthAttempt(
+  next: string,
+  channel?: WechatLoginChannel,
+  retUrl?: string,
+): string {
   const state = makeState();
   if (typeof window === 'undefined') return state;
   try {
     window.sessionStorage.setItem(SS_WX_STATE, state);
     window.sessionStorage.setItem(SS_WX_NEXT, sanitizeNext(next));
     window.sessionStorage.setItem(SS_WX_AT, String(Date.now()));
+    if (channel) window.sessionStorage.setItem(SS_WX_CHANNEL, channel);
+    else window.sessionStorage.removeItem(SS_WX_CHANNEL);
+    const ret = sanitizeRetUrl(retUrl);
+    if (ret) window.sessionStorage.setItem(SS_WX_RET, ret);
+    else window.sessionStorage.removeItem(SS_WX_RET);
   } catch {}
   return state;
 }
 
-export function consumeWechatOauthAttempt(stateFromQuery: string | null): { ok: boolean; next: string } {
-  const fallback = { ok: false, next: '/feed' };
+export function consumeWechatOauthAttempt(
+  stateFromQuery: string | null
+): { ok: boolean; next: string; channel?: WechatLoginChannel; retUrl?: string } {
+  const fallback: { ok: boolean; next: string; channel?: WechatLoginChannel; retUrl?: string } = {
+    ok: false,
+    next: '/feed',
+  };
   if (typeof window === 'undefined') return fallback;
   try {
     const storedState = window.sessionStorage.getItem(SS_WX_STATE) || '';
     const next = sanitizeNext(window.sessionStorage.getItem(SS_WX_NEXT) || '/feed');
+    const channelRaw = String(window.sessionStorage.getItem(SS_WX_CHANNEL) || '').trim();
+    const channel =
+      channelRaw === 'mp' || channelRaw === 'open' || channelRaw === 'app' ? (channelRaw as WechatLoginChannel) : undefined;
+    const retUrl = sanitizeRetUrl(window.sessionStorage.getItem(SS_WX_RET) || '');
     window.sessionStorage.removeItem(SS_WX_STATE);
     window.sessionStorage.removeItem(SS_WX_NEXT);
     window.sessionStorage.removeItem(SS_WX_AT);
-    if (!storedState) return { ok: false, next };
-    if (!stateFromQuery) return { ok: false, next };
-    if (String(stateFromQuery).trim() !== storedState) return { ok: false, next };
-    return { ok: true, next };
+    window.sessionStorage.removeItem(SS_WX_CHANNEL);
+    window.sessionStorage.removeItem(SS_WX_RET);
+    if (!storedState) return { ok: false, next, channel, retUrl };
+    if (!stateFromQuery) return { ok: false, next, channel, retUrl };
+    if (String(stateFromQuery).trim() !== storedState) return { ok: false, next, channel, retUrl };
+    return { ok: true, next, channel, retUrl };
   } catch {
     return fallback;
   }

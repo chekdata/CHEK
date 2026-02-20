@@ -34,6 +34,7 @@ export default function LoginClient(props: LoginClientProps) {
   const [msg, setMsg] = useState<string | null>(null);
 
   function wechatLogin() {
+    const channel = isWeChatBrowser() ? 'mp' : 'open';
     const appId = isWeChatBrowser()
       ? String(props.wechatMpAppId || '').trim()
       : String(props.wechatOpenAppId || '').trim();
@@ -45,8 +46,24 @@ export default function LoginClient(props: LoginClientProps) {
       );
       return;
     }
-    const s = storeWechatOauthAttempt(sanitizeNext(next));
-    const redirectUri = `${window.location.origin}${withPublicBasePath('/auth/wechat/callback')}`;
+    const retUrl = (() => {
+      try {
+        return String(window.location.href || '');
+      } catch {
+        return '';
+      }
+    })();
+    const s = storeWechatOauthAttempt(sanitizeNext(next), channel, retUrl);
+
+    const callbackOrigin = String(process.env.NEXT_PUBLIC_WECHAT_OAUTH_REDIRECT_ORIGIN || '')
+      .trim()
+      .replace(/\/+$/, '');
+    const base = `${(callbackOrigin || window.location.origin)}${withPublicBasePath(
+      '/auth/wechat/callback',
+    )}`;
+    const u = new URL(base);
+    if (retUrl) u.searchParams.set('wx_ret', retUrl);
+    const redirectUri = u.toString();
     const url = buildWechatOAuthUrl({
       appId,
       redirectUri,

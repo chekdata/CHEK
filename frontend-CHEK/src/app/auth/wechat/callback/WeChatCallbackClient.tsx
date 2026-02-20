@@ -26,7 +26,6 @@ type WeChatCallbackClientProps = {
   wechatOpenAppId?: string;
   wechatScope?: string;
   authClientId?: string;
-  wechatPackageName?: string;
 };
 
 export default function WeChatCallbackClient(props: WeChatCallbackClientProps) {
@@ -35,6 +34,7 @@ export default function WeChatCallbackClient(props: WeChatCallbackClientProps) {
 
   const code = useMemo(() => String(sp.get('code') || '').trim(), [sp]);
   const state = useMemo(() => sp.get('state'), [sp]);
+  const wxRet = useMemo(() => String(sp.get('wx_ret') || '').trim(), [sp]);
 
   const [status, setStatus] = useState<'loading' | 'error' | 'ok'>('loading');
   const [msg, setMsg] = useState<string>('正在登录…');
@@ -43,8 +43,37 @@ export default function WeChatCallbackClient(props: WeChatCallbackClientProps) {
     let canceled = false;
 
     async function run() {
+      // 如果回调落在“统一回调域”（例如 app.chekkk.com），sessionStorage 里没有发起端写入的 state/next
+      // 这时用 wx_ret 把 code/state 转发回发起域的 /auth/wechat/callback 再消费
+      try {
+        if (wxRet && code) {
+          let raw = String(wxRet || '').trim();
+          if (/^https?%3A/i.test(raw)) {
+            try { raw = decodeURIComponent(raw); } catch {}
+          }
+          const retUrl = new URL(raw);
+          if (retUrl.origin && typeof window !== 'undefined' && retUrl.origin !== window.location.origin) {
+            const host = String(retUrl.hostname || '').toLowerCase();
+            const allowed =
+              host === 'localhost' ||
+              host === '127.0.0.1' ||
+              host === 'chekkk.com' ||
+              host.endsWith('.chekkk.com');
+            if (allowed) {
+              const forward = new URL(`${retUrl.origin}${withPublicBasePath('/auth/wechat/callback')}`);
+              forward.searchParams.set('code', code);
+              if (state) forward.searchParams.set('state', String(state));
+              window.location.replace(forward.toString());
+              return;
+            }
+          }
+        }
+      } catch {}
+
       const attempt = consumeWechatOauthAttempt(state);
       const next = sanitizeNext(attempt.next);
+      const fallbackChannel = /MicroMessenger/i.test(String(window.navigator?.userAgent || '')) ? 'mp' : 'open';
+      const channel = attempt.channel || fallbackChannel;
       if (!code) {
         setStatus('error');
         setMsg('缺少 code：微信授权回调不完整。');
@@ -58,13 +87,12 @@ export default function WeChatCallbackClient(props: WeChatCallbackClientProps) {
 
       try {
         const clientId = String(props.authClientId || '').trim() || 'app';
-        const packageName = String(props.wechatPackageName || '').trim() || 'com.chek.app';
         const dto = await clientFetch<WechatLoginDTO>('/api/auth/v1/wechat/login', {
           method: 'POST',
           body: JSON.stringify({
             code,
             clientId,
-            packageName,
+            channel,
           }),
         });
 
@@ -90,6 +118,15 @@ export default function WeChatCallbackClient(props: WeChatCallbackClientProps) {
           return;
         }
 
+        // 优先回到登录前完整 URL（同域校验已在存储时做过）
+        try {
+          const retUrl = String((attempt as any).retUrl || '').trim();
+          if (retUrl) {
+            window.location.replace(retUrl);
+            return;
+          }
+        } catch {}
+
         router.replace(next);
       } catch (e: any) {
         if (canceled) return;
@@ -102,7 +139,7 @@ export default function WeChatCallbackClient(props: WeChatCallbackClientProps) {
     return () => {
       canceled = true;
     };
-  }, [code, router, state, props.authClientId, props.wechatPackageName]);
+  }, [code, router, state, props.authClientId]);
 
   function retryWechatLogin() {
     const isWx = /MicroMessenger/i.test(String(window.navigator?.userAgent || ''));
@@ -116,8 +153,23 @@ export default function WeChatCallbackClient(props: WeChatCallbackClientProps) {
       return;
     }
     const next = sanitizeNext('/feed');
-    const s = storeWechatOauthAttempt(next);
-    const redirectUri = `${window.location.origin}${withPublicBasePath('/auth/wechat/callback')}`;
+    const retUrl = (() => {
+      try {
+        return String(window.location.href || '');
+      } catch {
+        return '';
+      }
+    })();
+    const s = storeWechatOauthAttempt(next, isWx ? 'mp' : 'open', retUrl);
+    const callbackOrigin = String(process.env.NEXT_PUBLIC_WECHAT_OAUTH_REDIRECT_ORIGIN || '')
+      .trim()
+      .replace(/\/+$/, '');
+    const base = `${(callbackOrigin || window.location.origin)}${withPublicBasePath(
+      '/auth/wechat/callback',
+    )}`;
+    const u = new URL(base);
+    if (retUrl) u.searchParams.set('wx_ret', retUrl);
+    const redirectUri = u.toString();
     const url = buildWechatOAuthUrl({ appId, redirectUri, state: s, scopeInWechat: props.wechatScope });
     window.location.href = url;
   }
