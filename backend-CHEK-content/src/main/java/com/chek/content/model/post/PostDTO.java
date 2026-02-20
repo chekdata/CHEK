@@ -15,6 +15,9 @@ public class PostDTO {
   private Instant occurredAt;
   private List<PostMediaDTO> media;
   private String authorUserOneId;
+  private String sourcePlatform;
+  private String sourceId;
+  private String sourceUrl;
   private boolean isPublic;
   private boolean isIndexable;
   private long commentCount;
@@ -103,6 +106,30 @@ public class PostDTO {
 
   public void setAuthorUserOneId(String authorUserOneId) {
     this.authorUserOneId = authorUserOneId;
+  }
+
+  public String getSourcePlatform() {
+    return sourcePlatform;
+  }
+
+  public void setSourcePlatform(String sourcePlatform) {
+    this.sourcePlatform = sourcePlatform;
+  }
+
+  public String getSourceId() {
+    return sourceId;
+  }
+
+  public void setSourceId(String sourceId) {
+    this.sourceId = sourceId;
+  }
+
+  public String getSourceUrl() {
+    return sourceUrl;
+  }
+
+  public void setSourceUrl(String sourceUrl) {
+    this.sourceUrl = sourceUrl;
   }
 
   @JsonProperty("isPublic")

@@ -13,6 +13,9 @@
 .vpn
 **/.vpn
 
+.local
+**/.local
+
 .env
 .env.*
 !.env.example

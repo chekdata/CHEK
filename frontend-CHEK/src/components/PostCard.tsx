@@ -39,6 +39,14 @@ function formatRelativeTime(ts?: string): string {
   return d.toLocaleDateString();
 }
 
+function formatSourceLabel(platform?: string | null): string {
+  const p = String(platform || '').trim().toUpperCase();
+  if (!p) return '';
+  if (p === 'WEIBO') return '微博';
+  if (p === 'XHS' || p === 'XIAOHONGSHU') return '小红书';
+  return p;
+}
+
 type MediaPreview = {
   mediaObjectId: number;
   kind: string;
@@ -59,6 +67,8 @@ export function PostCard({ post, highlightQuery }: { post: PostDTO; highlightQue
   const meta = [time, post.locationName].filter(Boolean).join(' · ');
   const mediaCount = Array.isArray(post.media) ? post.media.length : 0;
   const mediaPreview = Math.min(mediaCount, 2);
+  const sourceUrl = String(post.sourceUrl || '').trim();
+  const sourceLabel = formatSourceLabel(post.sourcePlatform);
 
   const [likeCount, setLikeCount] = useState<number>(Number(post.likeCount || 0));
   const [favoriteCount, setFavoriteCount] = useState<number>(Number(post.favoriteCount || 0));
@@ -316,6 +326,20 @@ export function PostCard({ post, highlightQuery }: { post: PostDTO; highlightQue
           </svg>
           {shareHint || '分享'}
         </button>
+
+        {sourceUrl ? (
+          <a
+            className="chek-action-item"
+            href={sourceUrl}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="来源链接"
+            style={{ textDecoration: 'none' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            来源{sourceLabel ? `·${sourceLabel}` : ''}
+          </a>
+        ) : null}
       </div>
     </article>
   );
