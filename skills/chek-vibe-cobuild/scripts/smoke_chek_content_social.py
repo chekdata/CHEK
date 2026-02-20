@@ -297,9 +297,12 @@ def main() -> int:
     _print_step("pick post", True, f"postId={post_id}")
 
     if not follow_target:
-        _print_step("pick follow target", False, "no non-self author in first page")
-        return 2
-    _print_step("pick follow target", True, f"userOneId=***{follow_target[-6:]}")
+        # Some environments may only have seeded posts by a single author.
+        # Follow endpoints don't require the target to exist (no FK), so use a synthetic target to test the API.
+        follow_target = f"chek_test_follow_target_{self_user_one_id[-6:] or post_id}"
+        _print_step("pick follow target", True, f"synthetic=***{follow_target[-6:]}")
+    else:
+        _print_step("pick follow target", True, f"userOneId=***{follow_target[-6:]}")
 
     # Helpers
     def get_post(pid: int) -> dict:
@@ -428,4 +431,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
