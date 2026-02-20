@@ -149,10 +149,9 @@ function stripHtml(s) {
   return String(s || '')
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/p>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/g, ' ')
-    .replace(/</g, '＜')
-    .replace(/>/g, '＞')
+    .replace(/</g, '')
+    .replace(/>/g, '')
     .trim();
 }
 
