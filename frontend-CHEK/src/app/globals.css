@@ -213,6 +213,11 @@ a {
   padding: 16px;
   display: grid;
   gap: 16px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.chek-feed-list > * {
+  min-width: 0;
 }
 
 .chek-post-card {
@@ -428,6 +433,10 @@ a {
 
 .chek-section {
   padding: 16px;
+}
+
+.chek-section > * {
+  min-width: 0;
 }
 
 .chek-muted {
