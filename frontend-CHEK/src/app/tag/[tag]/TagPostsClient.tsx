@@ -89,7 +89,7 @@ export function TagPostsClient({ tag, initialPosts }: { tag: string; initialPost
   }, [sentinelRef, cursor, hasMore, loadingMore, safeTag]);
 
   return (
-    <div style={{ display: 'grid', gap: 10 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
         <div style={{ fontWeight: 900 }}>相辅</div>
         <div style={{ display: 'flex', gap: 10 }}>
@@ -135,7 +135,7 @@ export function TagPostsClient({ tag, initialPosts }: { tag: string; initialPost
 
       <div ref={sentinelRef} />
 
-      <div style={{ display: 'grid', justifyItems: 'center', paddingTop: 6 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', justifyItems: 'center', paddingTop: 6 }}>
         {hasMore ? (
           <button
             className="chek-chip gray"

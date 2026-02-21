@@ -108,10 +108,10 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
         </div>
       </header>
 
-      <main className="chek-section" style={{ display: 'grid', gap: 12 }}>
+      <main className="chek-section" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 12 }}>
         <section className="chek-card" style={{ padding: 16 }}>
           <div style={{ fontWeight: 900, marginBottom: 10 }}>有知</div>
-          <div style={{ display: 'grid', gap: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
             {wiki.length > 0 ? (
               wiki.map((e) => <WikiCard key={e.entryId} entry={e} />)
             ) : (

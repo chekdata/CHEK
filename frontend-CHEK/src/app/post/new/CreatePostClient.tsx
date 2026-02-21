@@ -411,7 +411,7 @@ export default function CreatePostClient() {
         </div>
       </header>
 
-      <main className="chek-section" style={{ display: 'grid', gap: 12 }}>
+      <main className="chek-section" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 12 }}>
         {!token ? (
           <div className="chek-card" style={{ padding: 16 }}>
             <div style={{ fontWeight: 900, marginBottom: 8 }}>先登录一下</div>
