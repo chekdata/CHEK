@@ -139,7 +139,7 @@ export default function WeChatCallbackClient(props: WeChatCallbackClientProps) {
     return () => {
       canceled = true;
     };
-  }, [code, router, state, props.authClientId]);
+  }, [code, router, state, wxRet, props.authClientId]);
 
   function retryWechatLogin() {
     const isWx = /MicroMessenger/i.test(String(window.navigator?.userAgent || ''));
