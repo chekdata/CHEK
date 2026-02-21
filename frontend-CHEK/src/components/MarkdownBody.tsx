@@ -27,7 +27,10 @@ export function MarkdownBody({ body }: { body: string }) {
         ol: ({ children }) => <ol style={{ margin: '10px 0', paddingLeft: 20 }}>{children}</ol>,
         li: ({ children }) => <li style={{ margin: '6px 0', lineHeight: 1.7 }}>{children}</li>,
         a: ({ href, children }) => (
-          <a href={href} style={{ color: 'var(--chek-primary)', fontWeight: 800 }}>
+          <a
+            href={href}
+            style={{ color: 'var(--chek-primary)', fontWeight: 800, overflowWrap: 'anywhere', wordBreak: 'break-word' }}
+          >
             {children}
           </a>
         ),
