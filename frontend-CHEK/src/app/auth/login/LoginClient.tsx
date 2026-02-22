@@ -20,6 +20,7 @@ type LoginClientProps = {
   wechatOpenAppId?: string;
   wechatScope?: string;
   authClientId?: string;
+  wechatOauthRedirectOrigin?: string;
 };
 
 export default function LoginClient(props: LoginClientProps) {
@@ -56,7 +57,9 @@ export default function LoginClient(props: LoginClientProps) {
     const s = storeWechatOauthAttempt(sanitizeNext(next), channel, retUrl);
 
     const callbackOrigin = String(
-      process.env.NEXT_PUBLIC_WECHAT_OAUTH_REDIRECT_ORIGIN || 'https://app.chekkk.com',
+      props.wechatOauthRedirectOrigin ||
+        process.env.NEXT_PUBLIC_WECHAT_OAUTH_REDIRECT_ORIGIN ||
+        'https://app.chekkk.com',
     )
       .trim()
       .replace(/\/+$/, '');

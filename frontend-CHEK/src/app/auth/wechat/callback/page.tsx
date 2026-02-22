@@ -19,6 +19,13 @@ export default function WeChatCallbackPage() {
   const wechatOpenAppId = String(process.env.CHEK_WECHAT_OPEN_APP_ID || process.env.NEXT_PUBLIC_WECHAT_OPEN_APP_ID || '').trim();
   const wechatScope = String(process.env.CHEK_WECHAT_SCOPE || process.env.NEXT_PUBLIC_WECHAT_SCOPE || '').trim() || 'snsapi_userinfo';
   const authClientId = String(process.env.CHEK_AUTH_CLIENT_ID || process.env.NEXT_PUBLIC_AUTH_CLIENT_ID || '').trim() || 'app';
+  const wechatOauthRedirectOrigin = String(
+    process.env.CHEK_WECHAT_OAUTH_REDIRECT_ORIGIN ||
+      process.env.NEXT_PUBLIC_WECHAT_OAUTH_REDIRECT_ORIGIN ||
+      'https://app.chekkk.com',
+  )
+    .trim()
+    .replace(/\/+$/, '');
 
   return (
     <Suspense
@@ -29,6 +36,7 @@ export default function WeChatCallbackPage() {
         wechatOpenAppId={wechatOpenAppId}
         wechatScope={wechatScope}
         authClientId={authClientId}
+        wechatOauthRedirectOrigin={wechatOauthRedirectOrigin}
       />
     </Suspense>
   );
