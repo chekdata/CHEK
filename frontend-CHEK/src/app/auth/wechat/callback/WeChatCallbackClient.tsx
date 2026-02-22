@@ -161,12 +161,12 @@ export default function WeChatCallbackClient(props: WeChatCallbackClientProps) {
       }
     })();
     const s = storeWechatOauthAttempt(next, isWx ? 'mp' : 'open', retUrl);
-    const callbackOrigin = String(process.env.NEXT_PUBLIC_WECHAT_OAUTH_REDIRECT_ORIGIN || '')
+    const callbackOrigin = String(
+      process.env.NEXT_PUBLIC_WECHAT_OAUTH_REDIRECT_ORIGIN || 'https://app.chekkk.com',
+    )
       .trim()
       .replace(/\/+$/, '');
-    const base = `${(callbackOrigin || window.location.origin)}${withPublicBasePath(
-      '/auth/wechat/callback',
-    )}`;
+    const base = `${callbackOrigin}${withPublicBasePath('/auth/wechat/callback')}`;
     const u = new URL(base);
     if (retUrl) u.searchParams.set('wx_ret', retUrl);
     const redirectUri = u.toString();
