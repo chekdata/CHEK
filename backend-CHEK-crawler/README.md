@@ -12,6 +12,9 @@ CHEK 外部投诉帖抓取服务（微博 + 小红书）：
 - `CHEK_INGEST_TOKEN`：与 `chek-content` 的 `CHEK_INGEST_TOKEN` 保持一致
 - `CRON`：默认 `0 */6 * * *`
 - `MAX_ITEMS_PER_RUN`：默认 `40`
+- `QUERY_LIMIT_PER_PLATFORM`：每个平台每轮采样的关键词数量（默认 `4`）
+- `USE_QUERY_BANDIT`：是否启用“越抓越准”的关键词采样/回传（默认 `true`）
+- `AI_SCORE_THRESHOLD`：入库阈值（0~1，默认 `0.55`）
 - `RUN_ONCE`：`true` 时仅跑一轮就退出（推荐用于 K8s CronJob）
 - `HEADLESS`：默认 `true`
 - `WEIBO_STORAGE_STATE_PATH`：微博登录态 storageState JSON 文件路径

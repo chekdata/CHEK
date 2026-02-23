@@ -4,14 +4,22 @@ import { z } from 'zod';
 import fs from 'node:fs';
 import path from 'node:path';
 import { ingestExternalPost } from './platform/ingest.mjs';
-import { crawlWeiboComplaints } from './platform/weibo.mjs';
-import { crawlXhsComplaints } from './platform/xhs.mjs';
+import { crawlWeiboByKeyword } from './platform/weibo.mjs';
+import { crawlXhsByKeyword } from './platform/xhs.mjs';
+import { heuristicComplaintScore } from './platform/score.mjs';
+import { upsertCrawlerQueries, sampleCrawlerQueries, reportCrawlerQueries } from './platform/query_api.mjs';
 
 const EnvSchema = z.object({
   CHEK_CONTENT_BASE_URL: z.string().min(1),
   CHEK_INGEST_TOKEN: z.string().min(1),
   CRON: z.string().min(1).default('0 */6 * * *'),
   MAX_ITEMS_PER_RUN: z.coerce.number().int().min(1).max(200).default(40),
+  QUERY_LIMIT_PER_PLATFORM: z.coerce.number().int().min(1).max(30).default(4),
+  USE_QUERY_BANDIT: z
+    .string()
+    .optional()
+    .transform((v) => String(v || '').trim().toLowerCase() !== 'false'),
+  AI_SCORE_THRESHOLD: z.coerce.number().min(0).max(1).default(0.55),
   RUN_ONCE: z
     .string()
     .optional()
@@ -75,29 +83,98 @@ async function runOnce(env) {
     args: ['--disable-blink-features=AutomationControlled'],
   });
   try {
-    const tasks = [
-      crawlWeiboComplaints({
-        browser,
-        keywords: env.keywords,
-        maxItems: Math.floor(env.MAX_ITEMS_PER_RUN / 2),
-        storageStatePath: env.WEIBO_STORAGE_STATE_PATH,
-        log,
-      }),
-      crawlXhsComplaints({
-        browser,
-        keywords: env.keywords,
-        maxItems: Math.ceil(env.MAX_ITEMS_PER_RUN / 2),
-        storageStatePath: env.XHS_STORAGE_STATE_PATH,
-        log,
-      }),
-    ];
+    const perPlatformMax = Math.max(1, Math.floor(env.MAX_ITEMS_PER_RUN / 2));
 
-    const results = await Promise.allSettled(tasks);
-    const items = [];
-    for (const r of results) {
-      if (r.status === 'fulfilled') items.push(...r.value);
-      else log({ level: 'error', msg: 'crawler_task_failed', error: String(r.reason || '') });
+    // Ensure seed queries exist in content service for both platforms.
+    if (env.USE_QUERY_BANDIT) {
+      await Promise.allSettled([
+        upsertCrawlerQueries(env.CHEK_CONTENT_BASE_URL, env.CHEK_INGEST_TOKEN, 'WEIBO', env.keywords),
+        upsertCrawlerQueries(env.CHEK_CONTENT_BASE_URL, env.CHEK_INGEST_TOKEN, 'XHS', env.keywords),
+      ]);
     }
+
+    let weiboQueries = env.keywords;
+    let xhsQueries = env.keywords;
+    if (env.USE_QUERY_BANDIT) {
+      try {
+        const q = await sampleCrawlerQueries(
+          env.CHEK_CONTENT_BASE_URL,
+          env.CHEK_INGEST_TOKEN,
+          'WEIBO',
+          env.QUERY_LIMIT_PER_PLATFORM
+        );
+        if (q && q.length > 0) weiboQueries = q;
+      } catch (e) {
+        log({ level: 'warn', msg: 'query_sample_failed', platform: 'WEIBO', error: String(e || '') });
+      }
+      try {
+        const q = await sampleCrawlerQueries(
+          env.CHEK_CONTENT_BASE_URL,
+          env.CHEK_INGEST_TOKEN,
+          'XHS',
+          env.QUERY_LIMIT_PER_PLATFORM
+        );
+        if (q && q.length > 0) xhsQueries = q;
+      } catch (e) {
+        log({ level: 'warn', msg: 'query_sample_failed', platform: 'XHS', error: String(e || '') });
+      }
+    }
+
+    const items = [];
+    const rewards = { WEIBO: [], XHS: [] };
+
+    async function runPlatform(platform, queries, crawlFn, storageStatePath) {
+      const qList = Array.isArray(queries) ? queries : [];
+      const seen = new Set();
+      for (const q of qList) {
+        if (items.length >= env.MAX_ITEMS_PER_RUN) break;
+        const kw = String(q || '').trim();
+        if (!kw) continue;
+        const fetched = await crawlFn({ browser, keyword: kw, maxItems: perPlatformMax, storageStatePath, log });
+
+        let trials = 0;
+        let accepted = 0;
+        let acceptedMean = 0;
+
+        for (const it of fetched) {
+          if (!it) continue;
+          const key = `${it.sourcePlatform}:${it.sourceId}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          trials += 1;
+
+          const s = heuristicComplaintScore({ title: it.title, body: it.body });
+          const score = Number(s.score || 0);
+          const ok = score >= env.AI_SCORE_THRESHOLD;
+          if (!ok) continue;
+
+          accepted += 1;
+          acceptedMean += score;
+
+          const tags = Array.isArray(it.tags) ? it.tags : [];
+          const aiTags = [];
+          if (score >= 0.8) aiTags.push('AI高置信');
+          else if (score >= 0.65) aiTags.push('AI较可信');
+          else aiTags.push('AI筛选');
+
+          items.push({
+            ...it,
+            tags: Array.from(new Set([...tags, ...aiTags])),
+          });
+          if (items.length >= env.MAX_ITEMS_PER_RUN) break;
+        }
+
+        const reward = trials > 0 ? Math.max(0, Math.min(1, accepted / trials)) : 0;
+        const mean = accepted > 0 ? acceptedMean / accepted : 0;
+        rewards[platform].push({ query: kw, reward: reward * 0.8 + mean * 0.2, trials: Math.max(1, trials) });
+        log({ level: 'info', msg: 'query_done', platform, query: kw, fetched: fetched.length, trials, accepted, reward });
+      }
+    }
+
+    await Promise.allSettled([
+      runPlatform('WEIBO', weiboQueries, crawlWeiboByKeyword, env.WEIBO_STORAGE_STATE_PATH),
+      runPlatform('XHS', xhsQueries, crawlXhsByKeyword, env.XHS_STORAGE_STATE_PATH),
+    ]);
 
     let ok = 0;
     let skipped = 0;
@@ -118,6 +195,13 @@ async function runOnce(env) {
           error: String(e || ''),
         });
       }
+    }
+
+    if (env.USE_QUERY_BANDIT) {
+      await Promise.allSettled([
+        reportCrawlerQueries(env.CHEK_CONTENT_BASE_URL, env.CHEK_INGEST_TOKEN, 'WEIBO', rewards.WEIBO),
+        reportCrawlerQueries(env.CHEK_CONTENT_BASE_URL, env.CHEK_INGEST_TOKEN, 'XHS', rewards.XHS),
+      ]);
     }
 
     log({

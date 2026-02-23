@@ -160,29 +160,44 @@ export async function crawlWeiboComplaints({ browser, keywords, maxItems, storag
     log({ level: 'warn', msg: 'weibo_skip_missing_storage_state' });
     return [];
   }
-  const context = await browser.newContext({ storageState: storageStatePath });
-  const page = await context.newPage();
   const out = [];
   try {
     for (const kw of keywords) {
       if (out.length >= maxItems) break;
-      const links = await collectSearchResults(page, kw, Math.max(6, maxItems), log);
-      for (const l of links) {
-        if (out.length >= maxItems) break;
-        const sourceUrl = toAbsoluteWeiboUrl(l.url);
-        const sourceId = extractWeiboMid(sourceUrl);
-        if (!sourceId) continue;
-        const detail = await extractDetail(page, sourceUrl, l.hint);
-        out.push({
-          sourcePlatform: 'WEIBO',
-          sourceId,
-          sourceUrl,
-          title: detail.title,
-          body: detail.body,
-          tags: ['投诉', '避坑', '外部来源', '微博'],
-          authorUserOneId: '投诉雷达',
-        });
-      }
+      const items = await crawlWeiboByKeyword({ browser, keyword: kw, maxItems, storageStatePath, log });
+      out.push(...items);
+    }
+  } catch {
+    // let caller decide; best-effort mode
+  }
+  return uniqBy(out, (x) => `${x.sourcePlatform}:${x.sourceId}`).slice(0, maxItems);
+}
+
+export async function crawlWeiboByKeyword({ browser, keyword, maxItems, storageStatePath, log }) {
+  if (!storageStatePath) return [];
+  const kw = String(keyword || '').trim();
+  if (!kw) return [];
+
+  const context = await browser.newContext({ storageState: storageStatePath });
+  const page = await context.newPage();
+  const out = [];
+  try {
+    const links = await collectSearchResults(page, kw, Math.max(6, maxItems), log);
+    for (const l of links) {
+      if (out.length >= maxItems) break;
+      const sourceUrl = toAbsoluteWeiboUrl(l.url);
+      const sourceId = extractWeiboMid(sourceUrl);
+      if (!sourceId) continue;
+      const detail = await extractDetail(page, sourceUrl, l.hint);
+      out.push({
+        sourcePlatform: 'WEIBO',
+        sourceId,
+        sourceUrl,
+        title: detail.title,
+        body: detail.body,
+        tags: ['投诉', '避坑', '外部来源', '微博'],
+        authorUserOneId: '投诉雷达',
+      });
     }
   } finally {
     await page.close().catch(() => {});

@@ -192,6 +192,24 @@ export async function crawlXhsComplaints({ browser, keywords, maxItems, storageS
     log({ level: 'warn', msg: 'xhs_skip_missing_storage_state' });
     return [];
   }
+  const out = [];
+  try {
+    for (const kw of keywords) {
+      if (out.length >= maxItems) break;
+      const items = await crawlXhsByKeyword({ browser, keyword: kw, maxItems, storageStatePath, log });
+      out.push(...items);
+    }
+  } catch {
+    // best-effort
+  }
+  return uniqBy(out, (x) => `${x.sourcePlatform}:${x.sourceId}`).slice(0, maxItems);
+}
+
+export async function crawlXhsByKeyword({ browser, keyword, maxItems, storageStatePath, log }) {
+  if (!storageStatePath) return [];
+  const kw = String(keyword || '').trim();
+  if (!kw) return [];
+
   const context = await browser.newContext({
     storageState: storageStatePath,
     locale: 'zh-CN',
@@ -212,25 +230,22 @@ export async function crawlXhsComplaints({ browser, keywords, maxItems, storageS
   const page = await context.newPage();
   const out = [];
   try {
-    for (const kw of keywords) {
+    const links = await collectSearchResults(page, kw, Math.max(6, maxItems), log);
+    for (const l of links) {
       if (out.length >= maxItems) break;
-      const links = await collectSearchResults(page, kw, Math.max(6, maxItems), log);
-      for (const l of links) {
-        if (out.length >= maxItems) break;
-        const sourceUrl = toExploreUrl(l.url);
-        const sourceId = extractNoteIdFromUrl(sourceUrl);
-        if (!sourceId) continue;
-        const detail = await extractNoteDetail(page, sourceUrl, l.hint);
-        out.push({
-          sourcePlatform: 'XHS',
-          sourceId,
-          sourceUrl,
-          title: detail.title,
-          body: detail.body,
-          tags: ['投诉', '避坑', '外部来源', '小红书'],
-          authorUserOneId: '投诉雷达',
-        });
-      }
+      const sourceUrl = toExploreUrl(l.url);
+      const sourceId = extractNoteIdFromUrl(sourceUrl);
+      if (!sourceId) continue;
+      const detail = await extractNoteDetail(page, sourceUrl, l.hint);
+      out.push({
+        sourcePlatform: 'XHS',
+        sourceId,
+        sourceUrl,
+        title: detail.title,
+        body: detail.body,
+        tags: ['投诉', '避坑', '外部来源', '小红书'],
+        authorUserOneId: '投诉雷达',
+      });
     }
   } finally {
     await page.close().catch(() => {});
