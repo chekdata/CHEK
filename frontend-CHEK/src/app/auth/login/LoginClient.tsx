@@ -49,6 +49,22 @@ export default function LoginClient(props: LoginClientProps) {
     }
     const retUrl = (() => {
       try {
+        const rawRet = String(sp.get('ret') || '').trim();
+        if (rawRet) {
+          const decoded = (() => {
+            try {
+              return decodeURIComponent(rawRet);
+            } catch {
+              return rawRet;
+            }
+          })();
+          const u = new URL(decoded, window.location.origin);
+          if (u.origin === window.location.origin && (u.protocol === 'http:' || u.protocol === 'https:')) {
+            return u.toString();
+          }
+        }
+
+        // fallback: current page
         return String(window.location.href || '');
       } catch {
         return '';
