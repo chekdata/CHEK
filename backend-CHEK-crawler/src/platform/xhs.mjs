@@ -21,21 +21,39 @@ function extractNoteIdFromUrl(url) {
 
 async function collectSearchResults(page, keyword, maxLinks, log) {
   const url = buildSearchUrl(keyword);
-  const respPromise = page.waitForResponse(
-    (r) => r.url().includes('/api/sns/web/v1/search/notes') && r.request().method() === 'POST',
-    { timeout: 20_000 }
-  );
+  const respPromise = page
+    .waitForResponse(
+      (r) => r.url().includes('/api/sns/web/v1/search/notes') && r.request().method() === 'POST',
+      { timeout: 20_000 }
+    )
+    .catch((e) => {
+      log({
+        level: 'warn',
+        msg: 'xhs_search_api_wait_failed',
+        keyword,
+        url,
+        error: String(e?.message || e || ''),
+      });
+      return null;
+    });
 
-  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60_000 });
-  await page.waitForTimeout(1200);
+  try {
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await page.waitForTimeout(1200);
+  } catch (e) {
+    log({
+      level: 'warn',
+      msg: 'xhs_search_nav_failed',
+      keyword,
+      url,
+      error: String(e?.message || e || ''),
+    });
+    return [];
+  }
 
   let j = null;
-  try {
-    const resp = await respPromise;
-    j = await resp.json();
-  } catch {
-    j = null;
-  }
+  const resp = await respPromise;
+  if (resp) j = await resp.json().catch(() => null);
 
   const items = Array.isArray(j?.data?.items) ? j.data.items : [];
   const normalized = items
