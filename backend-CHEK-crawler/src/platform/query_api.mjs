@@ -20,6 +20,7 @@ async function postJson(url, ingestToken, body) {
       'x-ingest-token': String(ingestToken || '').trim(),
     },
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(20_000),
   });
   const text = await r.text();
   if (!r.ok) throw new Error(`HTTP ${r.status}: ${text.slice(0, 500)}`);
@@ -66,4 +67,3 @@ export async function reportCrawlerQueries(baseUrl, ingestToken, platform, items
   await postJson(url, ingestToken, { platform: p, items: arr });
   return true;
 }
-
