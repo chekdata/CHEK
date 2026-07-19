@@ -67,7 +67,7 @@ jobs:
       - name: Trivy filesystem scan (HIGH/CRITICAL)
         id: trivy
         continue-on-error: true
-        uses: aquasecurity/trivy-action@0.20.0
+        uses: aquasecurity/trivy-action@v0.20.0
         with:
           scan-type: fs
           ignore-unfixed: true
@@ -255,4 +255,3 @@ jobs:
           event-type: app-image-pushed
           client-payload: >-
             {"app":"backend-chek-crawler","image_repo":"${{ env.REGISTRY }}/prod/backend-chek-crawler","image_tag":"${{ github.ref_name }}","envs":"prod"}
-
