@@ -33,6 +33,7 @@ export async function ingestExternalPost(baseUrl, ingestToken, item) {
       'x-ingest-token': String(ingestToken || '').trim(),
     },
     body: JSON.stringify(parsed.data),
+    signal: AbortSignal.timeout(20_000),
   });
   const text = await r.text();
   if (!r.ok) {
@@ -40,4 +41,3 @@ export async function ingestExternalPost(baseUrl, ingestToken, item) {
   }
   return { status: 'ok' };
 }
-

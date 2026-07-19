@@ -8,6 +8,7 @@ import { crawlWeiboByKeyword } from './platform/weibo.mjs';
 import { crawlXhsByKeyword } from './platform/xhs.mjs';
 import { heuristicComplaintScore } from './platform/score.mjs';
 import { upsertCrawlerQueries, sampleCrawlerQueries, reportCrawlerQueries } from './platform/query_api.mjs';
+import { withTimeout } from './timeout.mjs';
 
 const EnvSchema = z.object({
   CHEK_CONTENT_BASE_URL: z.string().min(1),
@@ -20,6 +21,7 @@ const EnvSchema = z.object({
     .optional()
     .transform((v) => String(v || '').trim().toLowerCase() !== 'false'),
   AI_SCORE_THRESHOLD: z.coerce.number().min(0).max(1).default(0.55),
+  RUN_TIMEOUT_MS: z.coerce.number().int().min(60_000).max(3_600_000).default(3_000_000),
   RUN_ONCE: z
     .string()
     .optional()
@@ -223,12 +225,12 @@ async function main() {
   loadEnvFile('.env');
   const env = readEnv();
 
-  await runOnce(env);
+  await withTimeout(runOnce(env), env.RUN_TIMEOUT_MS, 'crawler run');
 
   if (env.RUN_ONCE) return;
 
   cron.schedule(env.CRON, () => {
-    runOnce(env).catch((e) => {
+    withTimeout(runOnce(env), env.RUN_TIMEOUT_MS, 'crawler run').catch((e) => {
       console.error(JSON.stringify({ ts: nowIso(), level: 'error', msg: 'crawler_run_crash', error: String(e || '') }));
     });
   });
@@ -245,4 +247,3 @@ main().catch((e) => {
   console.error(JSON.stringify({ ts: nowIso(), level: 'error', msg: 'crawler_boot_failed', error: String(e || '') }));
   process.exit(1);
 });
-
